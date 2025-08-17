@@ -10,16 +10,9 @@ import { PipesManager } from "../../common/PipesManager";
 import {
   captureEvent,
   captureMainFeatureEvent,
-  setAnalyticsClient,
 } from "../../common/analytics";
-import posthog from "posthog-js";
 import { Operator } from "../../common/Operator";
 
-setAnalyticsClient({
-  init: posthog.init.bind(posthog),
-  identify: posthog.identify.bind(posthog),
-  capture: posthog.capture.bind(posthog),
-});
 class NodePipe {
   private analyticsInitialized = false;
   private analyticsEnabled = true;

@@ -8,7 +8,6 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import OnboardingNavigation from "@/components/onboarding/navigation";
-import posthog from "posthog-js";
 
 interface OnboardingSelectionProps {
   className?: string;
@@ -82,12 +81,6 @@ const OnboardingSelection: React.FC<OnboardingSelectionProps> = ({
   handlePrevSlide,
 }) => {
   const handleNext = () => {
-    // Track selected options in Posthog
-    posthog.capture("onboarding_usecases_selected", {
-      selected_options: selectedOptions,
-    });
-
-    // Call the original handleNextSlide function
     handleNextSlide();
   };
 

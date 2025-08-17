@@ -156,13 +156,7 @@ fn setup_logging(local_data_dir: &PathBuf, cli: &Cli) -> anyhow::Result<WorkerGu
     );
 
     // Build the final registry with conditional Sentry layer
-    if !cli.disable_telemetry {
-        tracing_registry
-            .with(sentry::integrations::tracing::layer())
-            .init();
-    } else {
-        tracing_registry.init();
-    };
+    tracing_registry.init();
 
     Ok(guard)
 }
@@ -174,24 +168,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     // Initialize Sentry only if telemetry is enabled
-    let _sentry_guard = if !cli.disable_telemetry {
-        let sentry_release_name_append = env::var("SENTRY_RELEASE_NAME_APPEND").unwrap_or_default();
-        let release_name = format!(
-            "{}{}",
-            sentry::release_name!().unwrap_or_default(),
-            sentry_release_name_append
-        );
-        Some(sentry::init((
-            "https://cf682877173997afc8463e5ca2fbe3c7@o4507617161314304.ingest.us.sentry.io/4507617170161664",
-            sentry::ClientOptions {
-                release: Some(release_name.into()),
-                traces_sample_rate: 0.1,
-                ..Default::default()
-            }
-        )))
-    } else {
-        None
-    };
+    let _sentry_guard = None;
 
     let local_data_dir = get_base_dir(&cli.data_dir)?;
     let local_data_dir_clone = local_data_dir.clone();

@@ -12,16 +12,9 @@ import { toSnakeCase, convertObjectToCamelCase } from "../../common/utils";
 import {
   captureEvent,
   captureMainFeatureEvent,
-  setAnalyticsClient,
 } from "../../common/analytics";
-import posthog from "posthog-js";
 import { Operator } from "../../common/Operator";
 
-setAnalyticsClient({
-  init: posthog.init.bind(posthog),
-  identify: posthog.identify.bind(posthog),
-  capture: posthog.capture.bind(posthog),
-});
 import { PipesManager } from "../../common/PipesManager";
 
 type Result<T> = { success: true; data: T } | { success: false; error: any };

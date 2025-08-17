@@ -4,7 +4,6 @@ import { Search, Loader2 } from "lucide-react";
 import OnboardingNavigation from "./navigation";
 import { toast } from "@/components/ui/use-toast";
 import { invoke } from "@tauri-apps/api/core";
-import posthog from "posthog-js";
 import { PipeApi } from "@/lib/api/store";
 import { useSettings } from "@/lib/hooks/use-settings";
 
@@ -25,8 +24,6 @@ const OnboardingPipeStore: React.FC<OnboardingPipeStoreProps> = ({
   const handleOpenSearchPipe = async () => {
     setIsLoading(true);
     try {
-      posthog.capture("open_search_pipe_from_onboarding");
-
       // Create initial toast
       const t = toast({
         title: "opening search pipe",

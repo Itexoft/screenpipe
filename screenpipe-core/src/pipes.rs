@@ -1,6 +1,5 @@
 use dirs::home_dir;
 use regex::Regex;
-use sentry;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::future::Future;
@@ -369,7 +368,6 @@ pub async fn run_pipe(
 ) -> Result<(tokio::process::Child, PipeState)> {
     let bun_path = find_bun_path().ok_or_else(|| {
         let err = anyhow::anyhow!("bun not found");
-        sentry::capture_error(&err.source().unwrap());
         err
     })?;
     let pipe_dir = screenpipe_dir.join("pipes").join(pipe);
@@ -540,7 +538,6 @@ pub async fn run_pipe(
                     "failed to install dependencies for next.js pipe: {}",
                     err_msg
                 );
-                sentry::capture_error(&err.source().unwrap());
                 anyhow::bail!(err);
             }
             info!(
@@ -750,10 +747,6 @@ async fn stream_logs(pipe: &str, child: &mut tokio::process::Child) -> Result<()
                 .any(|&pattern| line_lower.contains(&pattern.to_lowercase()))
             {
                 error!("[{}] {}", pipe_clone, line);
-                sentry::capture_message(
-                    &format!("[{}] {}", pipe_clone, line),
-                    sentry::Level::Error,
-                );
                 continue;
             }
 
@@ -1314,7 +1307,6 @@ fn find_bun_path_internal() -> Option<PathBuf> {
 
     error!("bun not found");
     let err = anyhow::anyhow!("Bun executable not found. Pipe functionality may be limited.");
-    sentry::capture_error(&err.source().unwrap());
     None
 }
 
@@ -1383,7 +1375,6 @@ async fn run_cron_schedule(
         Err(e) => {
             let err_msg = format!("invalid cron schedule: {}", e);
             error!("{}", err_msg);
-            sentry::capture_error(&anyhow::anyhow!(err_msg).source().unwrap());
             return;
         }
     };
@@ -1464,19 +1455,15 @@ async fn run_cron_schedule(
                             error!("{}", err_msg);
                             if let Ok(text) = res.text().await {
                                 error!("error response: {}", text);
-                                sentry::capture_message(
-                                    &format!("{}: {}", err_msg, text),
-                                    sentry::Level::Error
-                                );
+                                error!("{}: {}", err_msg, text);
                             } else {
-                                sentry::capture_message(&err_msg, sentry::Level::Error);
+                                error!("{}", err_msg);
                             }
                         }
                     }
                     Err(e) => {
                         let err_msg = format!("failed to execute cron job: {}", e);
                         error!("{}", err_msg);
-                        sentry::capture_error(&e);
                     }
                 }
             }

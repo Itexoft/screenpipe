@@ -60,7 +60,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { platform } from "@tauri-apps/plugin-os";
-import posthog from "posthog-js";
 import { Language } from "@/lib/language";
 import { open } from "@tauri-apps/plugin-dialog";
 import { exists } from "@tauri-apps/plugin-fs";
@@ -70,8 +69,6 @@ import { Separator } from "@/components/ui/separator";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSqlAutocomplete } from "@/lib/hooks/use-sql-autocomplete";
-import * as Sentry from "@sentry/react";
-import { defaultOptions } from "tauri-plugin-sentry-api";
 import { useLoginDialog } from "../login-dialog";
 
 type PermissionsStatus = {
@@ -308,33 +305,6 @@ export function RecordingSettings() {
 
     try {
       console.log("settings", settings);
-
-      if (!settings.analyticsEnabled) {
-        posthog.capture("telemetry", {
-          enabled: false,
-        });
-        // disable opentelemetry
-        posthog.opt_out_capturing();
-        // disable sentry
-        Sentry.close();
-        console.log("telemetry disabled");
-      } else {
-        const isDebug = process.env.TAURI_ENV_DEBUG === "true";
-        if (!isDebug) {
-          posthog.opt_in_capturing();
-          posthog.capture("telemetry", {
-            enabled: true,
-          });
-
-          // enable opentelemetry
-          console.log("telemetry enabled");
-
-          // enable sentry
-          Sentry.init({
-            ...defaultOptions,
-          });
-        }
-      }
 
       await invoke("stop_screenpipe");
 

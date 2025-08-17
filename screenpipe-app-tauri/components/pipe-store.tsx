@@ -26,7 +26,6 @@ import { PipeDetails } from "./pipe-store/pipe-details";
 import { PipeCard } from "./pipe-store/pipe-card";
 import { AddPipeForm } from "./pipe-store/add-pipe-form";
 import { useSettings } from "@/lib/hooks/use-settings";
-import posthog from "posthog-js";
 import { Progress } from "./ui/progress";
 import { open } from "@tauri-apps/plugin-dialog";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
@@ -56,8 +55,6 @@ import { usePlatform } from "@/lib/hooks/use-platform";
 import { invoke } from "@tauri-apps/api/core";
 import { cn } from "@/lib/utils";
 import { getAllWindows } from "@tauri-apps/api/window";
-import * as Sentry from "@sentry/react";
-import { defaultOptions } from "tauri-plugin-sentry-api";
 import { ToastAction } from "./ui/toast";
 
 const corePipes: string[] = [];
@@ -114,19 +111,6 @@ export const PipeStore: React.FC = () => {
   const [isPurging, setIsPurging] = useState(false);
   const [isPipeFunctionEnabled, setIsPipeFunctionEnabled] = useState(true);
 
-  // Add debounced search tracking
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery) {
-        posthog.capture("search_pipes", {
-          query: searchQuery,
-          results_count: filteredPipes.length,
-        });
-      }
-    }, 1000); // Debounce for 1 second
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, filteredPipes.length]);
 
   const fetchStorePlugins = async () => {
     try {
@@ -253,9 +237,6 @@ export const PipeStore: React.FC = () => {
   };
 
   const handleInstallSideload = async (url: string) => {
-    posthog.capture("add_own_pipe", {
-      newRepoUrl: url,
-    });
     try {
       const t = toast({
         title: "adding custom pipe",

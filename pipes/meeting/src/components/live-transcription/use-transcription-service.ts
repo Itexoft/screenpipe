@@ -3,7 +3,6 @@ import { useTranscriptionStream } from './hooks/screenpipe-stream-transcription-
 import { useBrowserTranscriptionStream } from './hooks/browser-stream-transcription-api'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useMeetingContext } from './hooks/storage-for-live-meeting'
-import { usePostHog } from 'posthog-js/react'
 
 type TranscriptionMode = 'browser' | 'screenpipe'
 
@@ -20,7 +19,6 @@ export function useTranscriptionService(mode?: TranscriptionMode) {
   const { startTranscriptionScreenpipe, stopTranscriptionScreenpipe } = useTranscriptionStream(onNewChunk)
   const { startTranscriptionBrowser, stopTranscriptionBrowser } = useBrowserTranscriptionStream(onNewChunk)
   const modeRef = useRef<TranscriptionMode | null>(null)
-  const posthog = usePostHog()
   const [isHealthChecking, setIsHealthChecking] = useState(true)
 
   // New state and refs for recording control
@@ -70,19 +68,13 @@ export function useTranscriptionService(mode?: TranscriptionMode) {
       console.log('transcription-service: initializing with mode:', finalMode)
       
       modeRef.current = finalMode
-      posthog.capture('meeting_web_app_transcription_mode_initialized', {
-        mode: finalMode,
-        requested_mode: mode,
-        health_mode: healthMode,
-        from_cache: GLOBAL_STATE.healthChecked
-      })
 
       setIsHealthChecking(false)
     }
 
     initializeTranscription()
     // No more interval needed
-  }, [mode, startTranscriptionScreenpipe, stopTranscriptionScreenpipe, startTranscriptionBrowser, stopTranscriptionBrowser, posthog])
+  }, [mode, startTranscriptionScreenpipe, stopTranscriptionScreenpipe, startTranscriptionBrowser, stopTranscriptionBrowser])
 
   // Handle transcription mode initialization and changes
   useEffect(() => {
@@ -93,10 +85,6 @@ export function useTranscriptionService(mode?: TranscriptionMode) {
       console.log('transcription-service: mode', modeRef.current ? 'changed from ' + modeRef.current + ' to: ' + mode : 'initialized to: ' + mode)
       
       // Track mode change in PostHog
-      posthog.capture('meeting_web_app_transcription_mode_changed', {
-        from: modeRef.current || 'initial',
-        to: mode
-      })
 
       // Stop any existing transcription
       if (modeRef.current) {
@@ -113,11 +101,9 @@ export function useTranscriptionService(mode?: TranscriptionMode) {
       // Start new transcription based on mode
       if (mode === 'screenpipe') {
         console.log('transcription-service: starting screenpipe transcription')
-        posthog.capture('meeting_web_app_transcription_started', { mode: 'screenpipe' })
         startTranscriptionScreenpipe()
       } else {
         console.log('transcription-service: starting browser transcription')
-        posthog.capture('meeting_web_app_transcription_started', { mode: 'browser' })
         startTranscriptionBrowser()
       }
     } else {
@@ -133,10 +119,9 @@ export function useTranscriptionService(mode?: TranscriptionMode) {
         stopTranscriptionScreenpipe()
       }
       if (modeRef.current) {
-        posthog.capture('meeting_web_app_transcription_stopped', { mode: modeRef.current })
       }
     }
-  }, [mode, isHealthChecking, startTranscriptionScreenpipe, stopTranscriptionScreenpipe, startTranscriptionBrowser, stopTranscriptionBrowser, posthog])
+  }, [mode, isHealthChecking, startTranscriptionScreenpipe, stopTranscriptionScreenpipe, startTranscriptionBrowser, stopTranscriptionBrowser])
 
   // Add toggle functionality
   const toggleRecording = useCallback(async (newState?: boolean) => {
