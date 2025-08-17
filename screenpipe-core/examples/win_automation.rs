@@ -43,9 +43,6 @@ fn main() -> Result<(), AutomationError> {
     // let opened_app = engine.open_application("msedge")?;
     // println!("opened application: {:?}", opened_app);
 
-    // open a URL in a browser
-    // let ele = engine.open_url("https://github.com", Some("msedge"))?;
-    // println!("ele: {:?}", ele);
 
     // perform actions on an element
     // get root of an application
@@ -183,9 +180,7 @@ remind about maintenance renewal coming up in December";
 
         // --- Part 3: Open Google Sheets and Input Data ---
         println!("Opening Google Sheets...");
-        let sheets_app = engine.open_url("https://docs.google.com/spreadsheets/d/1u2vPS43pkFdIrtWbl4Ug7D1ROmrtSD-YTo24FwGqDdo/edit?gid=0#gid=0", None)?;
-        // let sheets_app = engine.open_url("https://docs.google.com/spreadsheets/u/1/", None)?;
-        println!("Sheets opened: {:?}", sheets_app.attributes());
+        println!("Sheets opened");
         // Wait for Sheets to load
         // thread::sleep(Duration::from_secs(5)); 
 

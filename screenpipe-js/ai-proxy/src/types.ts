@@ -116,9 +116,11 @@ export interface Env {
 	OPENAI_API_KEY: string;
 	LANGFUSE_PUBLIC_KEY: string;
 	LANGFUSE_SECRET_KEY: string;
-	ANTHROPIC_API_KEY: string;
-	DEEPGRAM_API_KEY: string;
-	RATE_LIMITER: DurableObjectNamespace;
+        ANTHROPIC_API_KEY: string;
+        DEEPGRAM_API_KEY: string;
+        DEEPGRAM_API_URL: string;
+        DEEPGRAM_WEBSOCKET_URL: string;
+        RATE_LIMITER: DurableObjectNamespace;
 	CLERK_SECRET_KEY: string;
 	GEMINI_API_KEY: string;
 	SUPABASE_URL: string;
