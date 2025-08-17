@@ -45,7 +45,6 @@ anyhow = "1.0.86"
 hf-hub = { workspace = true }
 
 #opentelemetry
-sentry = { workspace = true }
 
 # Server
 axum = { version = "0.7.5", features = ["ws"] }

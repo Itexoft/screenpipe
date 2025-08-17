@@ -1,6 +1,4 @@
 use chrono::Local;
-use reqwest::Client;
-use serde_json::json;
 use serde_json::Value;
 use std::env;
 use std::fs::File;
@@ -18,10 +16,7 @@ use tracing::{error, info, warn};
 
 pub struct ResourceMonitor {
     start_time: Instant,
-    resource_log_file: Option<String>, // analyse output here: https://colab.research.google.com/drive/1zELlGdzGdjChWKikSqZTHekm5XRxY-1r?usp=sharing
-    posthog_client: Option<Client>,
-    posthog_enabled: bool,
-    distinct_id: String,
+    resource_log_file: Option<String>,
 }
 
 pub enum RestartSignal {
@@ -29,7 +24,7 @@ pub enum RestartSignal {
 }
 
 impl ResourceMonitor {
-    pub fn new(telemetry_enabled: bool) -> Arc<Self> {
+    pub fn new(_telemetry_enabled: bool) -> Arc<Self> {
         let resource_log_file = if env::var("SAVE_RESOURCE_USAGE").is_ok() {
             let now = Local::now();
             let filename = format!("resource_usage_{}.json", now.format("%Y%m%d_%H%M%S"));
@@ -49,72 +44,12 @@ impl ResourceMonitor {
             None
         };
 
-        // Create client once and reuse instead of Option
-        let posthog_client = telemetry_enabled.then(Client::new);
-
-        if telemetry_enabled {
-            debug!("Telemetry enabled, will send performance data to PostHog");
-        } else {
-            debug!("Telemetry disabled, will not send performance data to PostHog");
-        }
-
-        // Generate a unique ID for this installation
-        let distinct_id = uuid::Uuid::new_v4().to_string();
-
         Arc::new(Self {
             start_time: Instant::now(),
             resource_log_file,
-            posthog_client,
-            posthog_enabled: telemetry_enabled,
-            distinct_id,
         })
     }
 
-    async fn send_to_posthog(
-        &self,
-        total_memory_gb: f64,
-        system_total_memory: f64,
-        total_cpu: f32,
-    ) {
-        let Some(client) = &self.posthog_client else {
-            return;
-        };
-
-        // Create System only when needed
-        let sys = System::new();
-
-        // Avoid unnecessary cloning by using references
-        let payload = json!({
-            "api_key": "phc_Bt8GoTBPgkCpDrbaIZzJIEYt0CrJjhBiuLaBck1clce",
-            "event": "resource_usage",
-            "properties": {
-                "distinct_id": &self.distinct_id,
-                "$lib": "rust-reqwest",
-                "total_memory_gb": total_memory_gb,
-                "system_total_memory_gb": system_total_memory,
-                "memory_usage_percent": (total_memory_gb / system_total_memory) * 100.0,
-                "total_cpu_percent": total_cpu,
-                "runtime_seconds": self.start_time.elapsed().as_secs(),
-                "os_name": sys.name().unwrap_or_default(),
-                "os_version": sys.os_version().unwrap_or_default(),
-                "kernel_version": sys.kernel_version().unwrap_or_default(),
-                "cpu_count": sys.cpus().len(),
-                "release": env!("CARGO_PKG_VERSION"),
-            }
-        });
-
-        trace!(target: "resource_monitor", "Sending resource usage to PostHog: {:?}", payload);
-
-        // Send the event to PostHog
-        if let Err(e) = client
-            .post("https://eu.i.posthog.com/capture/")
-            .json(&payload)
-            .send()
-            .await
-        {
-            error!("Failed to send resource usage to PostHog: {}", e);
-        }
-    }
 
     async fn collect_metrics(&self, sys: &System) -> (f64, f64, f64, f32, f64, Duration) {
         let pid = std::process::id();
@@ -224,25 +159,15 @@ impl ResourceMonitor {
         // Log to file
         self.log_to_file(metrics).await;
 
-        // Send to PostHog if enabled
-        if self.posthog_enabled {
-            tokio::select! {
-                _ = self.send_to_posthog(total_memory_gb, system_total_memory, total_cpu) => {},
-                _ = tokio::time::sleep(Duration::from_secs(5)) => {
-                    warn!("PostHog request timed out");
-                }
-            }
-        }
+        self.log_to_file(metrics).await;
     }
 
     pub fn start_monitoring(
         self: &Arc<Self>,
         interval: Duration,
-        posthog_interval: Option<Duration>,
+        _unused: Option<Duration>,
     ) {
         let monitor = Arc::clone(self);
-        let posthog_interval = posthog_interval.unwrap_or(interval);
-        let mut last_posthog_update = Instant::now();
 
         tokio::spawn(async move {
             let mut sys = System::new_all();
@@ -251,48 +176,11 @@ impl ResourceMonitor {
                 tokio::select! {
                     _ = tokio::time::sleep(interval) => {
                         sys.refresh_all();
-                        let now = Instant::now();
-                        let should_send_to_posthog = now.duration_since(last_posthog_update) >= posthog_interval;
-
-                        if should_send_to_posthog {
-                            last_posthog_update = now;
-                            monitor.log_status(&sys).await;
-                        } else {
-                            // Log status without sending to PostHog
-                            monitor.log_status_local(&sys).await;
-                        }
+                        monitor.log_status(&sys).await;
                     }
                 }
             }
         });
-    }
-
-    // New method for logging without PostHog
-    async fn log_status_local(&self, sys: &System) {
-        let metrics = self.collect_metrics(sys).await;
-        let (
-            total_memory_gb,
-            system_total_memory,
-            memory_usage_percent,
-            total_cpu,
-            total_virtual_memory_gb,
-            runtime,
-        ) = metrics;
-
-        // Log to console with virtual memory
-        let log_message = format!(
-            "Runtime: {}s, Memory: {:.0}% ({:.2} GB / {:.2} GB), Virtual: {:.2} GB, CPU: {:.0}%",
-            runtime.as_secs(),
-            memory_usage_percent,
-            total_memory_gb,
-            system_total_memory,
-            total_virtual_memory_gb,
-            total_cpu
-        );
-        info!("{}", log_message);
-
-        // Log to file
-        self.log_to_file(metrics).await;
     }
 
     pub async fn shutdown(&self) {
@@ -302,8 +190,6 @@ impl ResourceMonitor {
             }
         }
 
-        if self.posthog_client.is_some() {
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        }
+        tokio::time::sleep(Duration::from_millis(100)).await;
     }
 }

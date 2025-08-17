@@ -13,7 +13,6 @@ import { LazyStore, LazyStore as TauriStore } from "@tauri-apps/plugin-store";
 import { localDataDir } from "@tauri-apps/api/path";
 import { flattenObject, unflattenObject } from "../utils";
 import { useEffect } from "react";
-import posthog from "posthog-js";
 import localforage from "localforage";
 
 export type VadSensitivity = "low" | "medium" | "high";
@@ -378,15 +377,8 @@ export function useSettings() {
 	const resetSetting = store.useStoreActions((actions) => actions.resetSetting);
 
 	useEffect(() => {
-		if (settings.user?.id) {
-			posthog.identify(settings.user?.id, {
-				email: settings.user?.email,
-				name: settings.user?.name,
-				github_username: settings.user?.github_username,
-				website: settings.user?.website,
-				contact: settings.user?.contact,
-			});
-		}
+                if (settings.user?.id) {
+                }
 	}, [settings.user?.id]);
 
 	const getDataDir = async () => {
@@ -445,12 +437,8 @@ export function useSettings() {
 				...data.user,
 			} as User;
 
-			// if user was not logged in, send posthog event app_login with email
-			if (!settings.user?.id) {
-				posthog.capture("app_login", {
-					email: userData.email,
-				});
-			}
+                    if (!settings.user?.id) {
+                    }
 
 			// cache the result
 			await localforage.setItem(cacheKey, {

@@ -24,7 +24,6 @@ import { PricingToggle } from "./pricing-toggle";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import posthog from "posthog-js";
 import { platform } from "@tauri-apps/plugin-os";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 
@@ -91,9 +90,6 @@ export function AccountSection() {
 
   useEffect(() => {
     if (!settings.user?.email) {
-      posthog.capture("app_login", {
-        email: settings.user?.email,
-      });
     }
 
     const setupDeepLink = async () => {
@@ -343,11 +339,6 @@ export function AccountSection() {
                     price={plan.price}
                     features={plan.features}
                     onSelect={async () => {
-                      if (plan.title.toLowerCase() === "enterprise") {
-                        posthog.capture("enterprise_plan_selected");
-                        openUrl(plan.url);
-                        return;
-                      }
 
                       if (!settings.user?.id) {
                         toast({
@@ -357,8 +348,11 @@ export function AccountSection() {
                         });
                         return;
                       }
+                      if (plan.title.toLowerCase() === "enterprise") {
+                        openUrl(plan.url);
+                        return;
+                      }
                       if (!settings.user?.cloud_subscribed) {
-                        posthog.capture("cloud_plan_selected");
                         openUrl(plan.url);
                       }
                     }}

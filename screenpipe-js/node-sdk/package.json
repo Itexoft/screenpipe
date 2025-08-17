@@ -27,7 +27,6 @@
     "eventsource": "^3.0.2",
     "express": "^4.21.1",
     "node-cron": "^3.0.3",
-    "posthog-js": "^1.205.0",
     "zod": "^3.24.2"
   },
   "peerDependencies": {

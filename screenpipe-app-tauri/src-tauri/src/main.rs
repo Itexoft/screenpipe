@@ -1,7 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use analytics::AnalyticsManager;
 use commands::load_pipe_config;
 use commands::save_pipe_config;
 use commands::show_main_window;
@@ -28,9 +27,7 @@ use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
 use updates::start_update_check;
-mod analytics;
 mod icons;
-use crate::analytics::start_analytics;
 
 mod commands;
 mod disk_usage;
@@ -69,7 +66,6 @@ use std::collections::HashMap;
 use tauri::AppHandle;
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
-use tauri_plugin_sentry::sentry;
 mod health;
 use health::start_health_check;
 
@@ -596,13 +592,6 @@ async fn main() {
     let _ = fix_path_env::fix();
 
     // Initialize Sentry early
-    let sentry_guard = sentry::init((
-        "https://8770b0b106954e199df089bf4ffa89cf@o4507617161314304.ingest.us.sentry.io/4508716587876352", // Replace with your actual Sentry DSN
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
-            ..Default::default()
-        },
-    ));
 
     // Set permanent OLLAMA_ORIGINS env var on Windows if not present
     #[cfg(target_os = "windows")]
@@ -666,7 +655,6 @@ async fn main() {
         }))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_sentry::init(&sentry_guard))
         .manage(sidecar_state)
         .invoke_handler(tauri::generate_handler![
             spawn_screenpipe,
@@ -744,9 +732,6 @@ async fn main() {
 
             info!("Local data directory: {}", base_dir.display());
 
-            // PostHog analytics setup
-            let posthog_api_key = "phc_Bt8GoTBPgkCpDrbaIZzJIEYt0CrJjhBiuLaBck1clce".to_string();
-            let interval_hours = 6;
 
             let path = base_dir.join("store.bin");
             if !path.exists() {
@@ -760,7 +745,6 @@ async fn main() {
 
             // Initialize default store values if empty
             if store.is_empty() {
-                store.set("analyticsEnabled".to_string(), Value::Bool(true));
                 store.set(
                     "config".to_string(),
                     serde_json::to_value(Config::default())?,
@@ -816,13 +800,6 @@ async fn main() {
                 }
             }
 
-            // Check analytics settings from store
-            let is_analytics_enabled = store
-                .get("analyticsEnabled")
-                .unwrap_or(Value::Bool(true))
-                .as_bool()
-                .unwrap_or(true);
-
             let is_autostart_enabled = store
                 .get("autoStartEnabled")
                 .unwrap_or(Value::Bool(true))
@@ -839,35 +816,6 @@ async fn main() {
                 "registered for autostart? {}",
                 autostart_manager.is_enabled().unwrap()
             );
-
-            let unique_id = store
-                .get("user.id")
-                .and_then(|v| v.as_str().map(String::from))
-                .unwrap_or_default();
-
-            let email = store
-                .get("user.email")
-                .and_then(|v| v.as_str().map(String::from))
-                .unwrap_or_default();
-
-            if is_analytics_enabled {
-                match start_analytics(
-                    unique_id,
-                    email,
-                    posthog_api_key,
-                    interval_hours,
-                    "http://localhost:3030".to_string(),
-                    base_dir.clone(),
-                    is_analytics_enabled,
-                ) {
-                    Ok(analytics_manager) => {
-                        app.manage(analytics_manager);
-                    }
-                    Err(e) => {
-                        error!("Failed to start analytics: {}", e);
-                    }
-                }
-            }
 
             // Start health check service (macos only)
             let app_handle_clone = app_handle.clone();
@@ -896,38 +844,10 @@ async fn main() {
     app.run(|app_handle, event| match event {
         tauri::RunEvent::Ready { .. } => {
             debug!("Ready event");
-            // Send app started event
-            let app_handle = app_handle.app_handle().clone();
-            tauri::async_runtime::spawn(async move {
-                if let Some(analytics) = app_handle.try_state::<Arc<AnalyticsManager>>() {
-                    let _ = analytics
-                        .send_event(
-                            "app_started",
-                            Some(json!({
-                                "startup_type": "normal"
-                            })),
-                        )
-                        .await;
-                }
-            });
         }
         tauri::RunEvent::ExitRequested { .. } => {
             debug!("ExitRequested event");
 
-            // Send app closed event before shutdown
-            let app_handle_v2 = app_handle.app_handle().clone();
-            tauri::async_runtime::spawn(async move {
-                if let Some(analytics) = app_handle_v2.try_state::<Arc<AnalyticsManager>>() {
-                    let _ = analytics
-                        .send_event(
-                            "app_closed",
-                            Some(json!({
-                                "shutdown_type": "normal"
-                            })),
-                        )
-                        .await;
-                }
-            });
 
             // Shutdown server
             if let Some(server_shutdown_tx) = app_handle.try_state::<mpsc::Sender<()>>() {

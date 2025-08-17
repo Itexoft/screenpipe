@@ -34,7 +34,6 @@ import { MemoizedReactMarkdown } from "./markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { format } from "date-fns";
-import posthog from "posthog-js";
 
 export interface InboxMessageAction {
   label: string;
@@ -266,7 +265,6 @@ export function InboxMessages({
   }, []);
 
   useEffect(() => {
-    posthog.capture("inbox opened");
 
     function handleClickOutside(event: MouseEvent) {
       if (

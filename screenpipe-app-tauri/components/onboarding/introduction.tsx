@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { RainbowButton } from "../ui/rainbow-button";
 import { ArrowRight } from "lucide-react";
 import { useSettings } from "@/lib/hooks/use-settings";
-import posthog from "posthog-js";
 import { useOnboarding } from "@/lib/hooks/use-onboarding";
 
 interface OnboardingIntroProps {
@@ -19,7 +18,6 @@ const OnboardingIntro: React.FC<OnboardingIntroProps> = ({
   const { setShowOnboarding } = useOnboarding();
   const handleSkip = () => {
     setShowOnboarding(false);
-    posthog.capture("onboarding_skipped");
   };
 
   return (

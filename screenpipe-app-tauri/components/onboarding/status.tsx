@@ -15,7 +15,6 @@ import { Label } from "../ui/label";
 import { LogFileButton } from "../log-file-button";
 import { Separator } from "../ui/separator";
 import { invoke } from "@tauri-apps/api/core";
-import posthog from "posthog-js";
 import { toast } from "@/components/ui/use-toast";
 import { PermissionButtons } from "../status/permission-buttons";
 import { usePlatform } from "@/lib/hooks/use-platform";
@@ -188,7 +187,6 @@ const OnboardingStatus: React.FC<OnboardingStatusProps> = ({
   };
 
   const handleStartScreenpipe = async () => {
-    posthog.capture("screenpipe_setup_start");
     setIsLoading(true);
     const toastId = toast({
       title: "starting screenpipe",

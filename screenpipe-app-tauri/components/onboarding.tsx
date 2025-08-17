@@ -15,7 +15,6 @@ import { useOnboarding } from "@/lib/hooks/use-onboarding";
 import { useSettings } from "@/lib/hooks/use-settings";
 import OnboardingLogin from "./onboarding/login";
 import OnboardingPipeStore from "./onboarding/pipe-store";
-import posthog from "posthog-js";
 
 type SlideKey =
   | "intro"
@@ -134,10 +133,6 @@ const trackOnboardingStep = (
   step: SlideKey | "completed",
   properties?: Record<string, any>
 ) => {
-  posthog.capture("onboarding_step", {
-    step,
-    ...properties,
-  });
 };
 
 const Onboarding: React.FC = () => {
