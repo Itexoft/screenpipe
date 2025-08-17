@@ -15,14 +15,15 @@ export async function handleFileTranscription(request: Request, env: Env): Promi
     const sampleRate = request.headers.get('sample_rate') || '16000';
     
     const deepgramResponse = await fetch(
-      'https://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&sample_rate=' +
+      env.DEEPGRAM_API_URL +
+        '?model=nova-3&smart_format=true&sample_rate=' +
         sampleRate +
         (languages.length > 0 ? '&' + languages.map((lang) => `detect_language=${lang}`).join('&') : ''),
       {
         method: 'POST',
         headers: {
           Authorization: `Token ${env.DEEPGRAM_API_KEY}`,
-          'Content-Type': 'audio/wav', 
+          'Content-Type': 'audio/wav',
         },
         body: audioBuffer,
       }
@@ -56,7 +57,7 @@ export async function handleWebSocketUpgrade(request: Request, env: Env): Promis
     server.accept();
 
     let params = new URL(request.url).searchParams;
-    let url = new URL('wss://api.deepgram.com/v1/listen');
+    let url = new URL(env.DEEPGRAM_WEBSOCKET_URL);
     
     for (let [key, value] of params.entries()) {
       url.searchParams.set(key, value);

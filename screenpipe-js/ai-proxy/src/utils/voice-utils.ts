@@ -186,7 +186,7 @@ export async function textToSpeech(text: string, env: Env, options: TTSOptions =
 		console.log(`Converting text to speech using voice: ${voice}, encoding: ${encoding}`);
 		console.log(`Text length: ${text.length} characters`);
 
-		const url = new URL('https://api.deepgram.com/v1/speak');
+                const url = new URL(env.DEEPGRAM_API_URL);
 		url.searchParams.set('model', voice);
 
 		if (encoding !== 'linear16') {
