@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::Arc;
 use tauri::Emitter;
-use tauri::{Manager, State};
+use tauri::{Manager, State, Wry};
+type AppHandle = tauri::AppHandle<Wry>;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_store::Store;
@@ -78,7 +79,7 @@ impl User {
 #[tauri::command]
 pub async fn stop_screenpipe(
     state: State<'_, SidecarState>,
-    _app: tauri::AppHandle,
+    _app: AppHandle,
 ) -> Result<(), String> {
     debug!("Killing screenpipe");
 
@@ -161,7 +162,7 @@ pub async fn stop_screenpipe(
 #[tauri::command]
 pub async fn spawn_screenpipe(
     state: tauri::State<'_, SidecarState>,
-    app: tauri::AppHandle,
+    app: AppHandle,
     override_args: Option<Vec<String>>,
 ) -> Result<(), String> {
     let mut manager = state.0.lock().await;
@@ -177,7 +178,7 @@ pub async fn spawn_screenpipe(
 }
 
 fn spawn_sidecar(
-    app: &tauri::AppHandle,
+    app: &AppHandle,
     override_args: Option<Vec<String>>,
 ) -> Result<CommandChild, String> {
     let store = get_store(app, None).unwrap();
@@ -565,7 +566,7 @@ impl SidecarManager {
 
     pub async fn spawn(
         &mut self,
-        app: &tauri::AppHandle,
+        app: &AppHandle,
         override_args: Option<Vec<String>>,
     ) -> Result<(), String> {
         info!("Spawning sidecar with override args: {:?}", override_args);
@@ -579,7 +580,7 @@ impl SidecarManager {
         Ok(())
     }
 
-    async fn update_settings(&mut self, app: &tauri::AppHandle) -> Result<(), String> {
+    async fn update_settings(&mut self, app: &AppHandle) -> Result<(), String> {
         let store = get_store(app, None).unwrap();
 
         let dev_mode = store

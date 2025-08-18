@@ -18,6 +18,8 @@ use std::convert::Infallible;
 use std::net::SocketAddr;
 use tauri::Emitter;
 use tauri::Manager;
+use tauri::Wry;
+type AppHandle = tauri::AppHandle<Wry>;
 #[allow(unused_imports)]
 use tauri_plugin_notification::NotificationExt;
 use tokio::sync::broadcast;
@@ -36,7 +38,7 @@ struct LogEntry {
 
 #[derive(Clone)]
 pub struct ServerState {
-    pub app_handle: tauri::AppHandle,
+    pub app_handle: AppHandle,
     settings_tx: broadcast::Sender<String>,
 }
 
@@ -127,7 +129,7 @@ async fn settings_stream(
     )
 }
 
-pub async fn run_server(app_handle: tauri::AppHandle, port: u16) {
+pub async fn run_server(app_handle: AppHandle, port: u16) {
     let (settings_tx, _) = broadcast::channel(100);
     let settings_tx_clone = settings_tx.clone();
     let app_handle_clone = app_handle.clone();
@@ -438,7 +440,7 @@ async fn register_http_shortcut(
     let method = payload.method.clone();
     let body = payload.body.clone();
 
-    let handler = move |_app: &tauri::AppHandle| {
+    let handler = move |_app: &AppHandle| {
         info!("executing http shortcut");
         let client = client.clone();
         let endpoint = endpoint.clone();
@@ -494,7 +496,7 @@ async fn register_http_shortcut(
     }
 }
 
-pub fn spawn_server(app_handle: tauri::AppHandle, port: u16) -> mpsc::Sender<()> {
+pub fn spawn_server(app_handle: AppHandle, port: u16) -> mpsc::Sender<()> {
     let (tx, mut rx) = mpsc::channel(1);
 
     tokio::spawn(async move {
