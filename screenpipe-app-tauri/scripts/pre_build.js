@@ -3,6 +3,7 @@ import fs from 'fs/promises'
 import os from 'os'
 import path from 'path'
 
+console.log = () => {}
 const isDevMode = process.env.SCREENPIPE_APP_DEV === 'true' || false;
 
 const originalCWD = process.cwd()
@@ -237,16 +238,11 @@ if (platform == 'linux') {
 
 
 	// Copy screenpipe binary
-	console.log('copying screenpipe binary for linux...');
-	const potentialPaths = [
-		path.join(__dirname, '..', '..', '..', '..', 'target', 'release', 'screenpipe'),
-		path.join(__dirname, '..', '..', '..', '..', 'target', 'x86_64-unknown-linux-gnu', 'release', 'screenpipe'),
-		path.join(__dirname, '..', '..', 'target', 'x86_64-unknown-linux-gnu', 'release', 'screenpipe'),
-		path.join(__dirname, '..', '..', '..', 'target', 'release', 'screenpipe'),
-		path.join(__dirname, '..', '..', 'target', 'release', 'screenpipe'),
-		path.join(__dirname, '..', 'target', 'release', 'screenpipe'),
-		'/home/runner/work/screenpipe/screenpipe/target/release/screenpipe',
-	];
+        console.log('copying screenpipe binary for linux...');
+        const potentialPaths = [
+                path.join(__dirname, '..', '..', 'target', 'release', 'screenpipe'),
+                path.join(__dirname, '..', '..', 'target', 'x86_64-unknown-linux-gnu', 'release', 'screenpipe'),
+        ];
 
 	let copied = false;
 	for (const screenpipeSrc of potentialPaths) {

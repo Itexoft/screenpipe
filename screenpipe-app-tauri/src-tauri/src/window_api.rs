@@ -1,7 +1,7 @@
 use axum::{extract::State, http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
-use tracing::{error, info};
+use tracing::error;
 
 use crate::ServerState;
 
@@ -32,7 +32,6 @@ pub async fn show_specific_window(
     State(state): State<ServerState>,
     Json(payload): Json<OpenLocalPathPayload>,
 ) -> Result<Json<ApiResponse>, (StatusCode, String)> {
-    info!("opening local path: {}", payload.path);
 
     // Close existing window if it exists
     if let Some(existing_window) = state.app_handle.get_webview_window(&payload.title) {
@@ -46,7 +45,7 @@ pub async fn show_specific_window(
         .app_handle
         .set_activation_policy(tauri::ActivationPolicy::Accessory);
     let url = format!("http://localhost:{}{}", payload.port, payload.path);
-    let builder = tauri::WebviewWindowBuilder::new(
+    let mut builder = tauri::WebviewWindowBuilder::new(
         &state.app_handle,
         &payload.title,
         tauri::WebviewUrl::External(url.parse().unwrap()),
@@ -106,7 +105,6 @@ pub async fn close_window(
     State(state): State<ServerState>,
     Json(payload): Json<CloseWindowPayload>,
 ) -> Result<Json<ApiResponse>, (StatusCode, String)> {
-    info!("received window close request: {:?}", payload);
 
     if let Some(window) = state.app_handle.get_webview_window(&payload.title) {
         match window.destroy() {
