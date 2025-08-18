@@ -4,6 +4,7 @@ use serde_json::Value;
 use tauri::Manager;
 use tracing::{error, info};
 
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 #[tauri::command]
 pub fn set_tray_unhealth_icon(app_handle: tauri::AppHandle<tauri::Wry>) {
     if let Some(main_tray) = app_handle.tray_by_id("screenpipe_main") {
@@ -13,6 +14,7 @@ pub fn set_tray_unhealth_icon(app_handle: tauri::AppHandle<tauri::Wry>) {
     }
 }
 
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 #[tauri::command]
 pub fn set_tray_health_icon(app_handle: tauri::AppHandle<tauri::Wry>) {
     if let Some(main_tray) = app_handle.tray_by_id("screenpipe_main") {

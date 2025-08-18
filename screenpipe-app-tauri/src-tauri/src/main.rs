@@ -34,6 +34,7 @@ mod permissions;
 mod server;
 mod sidecar;
 mod store;
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 mod tray;
 mod window_api;
 
@@ -48,7 +49,9 @@ mod config;
 pub use config::get_base_dir;
 
 pub use commands::reset_all_pipes;
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 pub use commands::set_tray_health_icon;
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 pub use commands::set_tray_unhealth_icon;
 pub use server::spawn_server;
 pub use sidecar::spawn_screenpipe;
@@ -65,6 +68,7 @@ use tauri::AppHandle;
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 mod health;
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 use health::start_health_check;
 
 // New struct to hold shortcut configuration
@@ -661,7 +665,9 @@ async fn main() {
             load_pipe_config,
             save_pipe_config,
             reset_all_pipes,
+            #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
             set_tray_unhealth_icon,
+            #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
             set_tray_health_icon,
             commands::update_show_screenpipe_shortcut,
             commands::get_disk_usage,
@@ -785,6 +791,7 @@ async fn main() {
                 debug!("Skipping sidecar spawn: dev_mode enabled");
             }
 
+            #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
             if let Some(_) = app_handle.tray_by_id("screenpipe_main") {
                 if let Err(e) = tray::setup_tray(&app_handle) {
                     error!("Failed to setup tray: {}", e);
@@ -808,13 +815,15 @@ async fn main() {
                 autostart_manager.is_enabled().unwrap()
             );
 
-            // Start health check service (macos only)
-            let app_handle_clone = app_handle.clone();
+            #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
+            {
+                let app_handle_clone = app_handle.clone();
                 tauri::async_runtime::spawn(async move {
-                if let Err(e) = start_health_check(app_handle_clone).await {
-                    error!("Failed to start health check service: {}", e);
-                }
-            });
+                    if let Err(e) = start_health_check(app_handle_clone).await {
+                        error!("Failed to start health check service: {}", e);
+                    }
+                });
+            }
 
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Regular);
