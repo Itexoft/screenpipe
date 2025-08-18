@@ -6,12 +6,14 @@ use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use tauri::tray::{MouseButton, MouseButtonState, TrayIcon};
+use tauri::tray::{MouseButton, MouseButtonState};
 use tauri::Emitter;
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem},
-    AppHandle, Manager, Wry,
+    Manager, Wry,
 };
+type AppHandle = tauri::AppHandle<Wry>;
+type TrayIcon = tauri::tray::TrayIcon<Wry>;
 use tauri_plugin_opener::OpenerExt;
 
 use tracing::{debug, error};
@@ -36,10 +38,7 @@ pub fn setup_tray(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-fn create_dynamic_menu(
-    app: &AppHandle,
-    state: &MenuState,
-) -> Result<tauri::menu::Menu<Wry>> {
+fn create_dynamic_menu(app: &AppHandle, state: &MenuState) -> Result<tauri::menu::Menu<Wry>> {
     let store = get_store(app, None)?;
     let mut menu_builder = MenuBuilder::new(app);
 
@@ -257,7 +256,6 @@ fn get_current_shortcuts(app: &AppHandle) -> Result<HashMap<String, String>> {
 
     Ok(shortcuts)
 }
-
 
 fn format_shortcut(shortcut: &str) -> String {
     // Add parentheses inside the formatting to ensure consistent styling

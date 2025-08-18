@@ -1,6 +1,6 @@
 use super::get_base_dir;
 use std::sync::Arc;
-use tauri::AppHandle;
+use tauri::Wry;
 use tauri_plugin_store::StoreBuilder;
 use tracing::debug;
 
@@ -19,9 +19,9 @@ impl Default for ProfilesConfig {
     }
 }
 
-pub fn get_profiles_store(
-    app: &AppHandle,
-) -> anyhow::Result<Arc<tauri_plugin_store::Store<tauri::Wry>>> {
+type AppHandle = tauri::AppHandle<Wry>;
+
+pub fn get_profiles_store(app: &AppHandle) -> anyhow::Result<Arc<tauri_plugin_store::Store<Wry>>> {
     let base_dir = get_base_dir(app, None)?;
     let profiles_path = base_dir.join("profiles.bin");
     Ok(StoreBuilder::new(app, profiles_path).build()?)
@@ -30,7 +30,7 @@ pub fn get_profiles_store(
 pub fn get_store(
     app: &AppHandle,
     profile_name: Option<String>,
-) -> anyhow::Result<Arc<tauri_plugin_store::Store<tauri::Wry>>> {
+) -> anyhow::Result<Arc<tauri_plugin_store::Store<Wry>>> {
     let base_dir = get_base_dir(app, None)?;
     let profiles_path = base_dir.join("profiles.bin");
 
@@ -60,5 +60,5 @@ pub fn get_store(
     // Build and return the store wrapped in Arc
     StoreBuilder::new(app, store_path)
         .build()
-        .map_err(|e| anyhow::anyhow!(e))
+        .map_err(|e| anyhow::anyhow!(e.to_string()))
 }

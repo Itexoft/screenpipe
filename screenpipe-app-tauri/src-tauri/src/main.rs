@@ -64,7 +64,8 @@ pub use permissions::do_permissions_check;
 pub use permissions::open_permission_settings;
 pub use permissions::request_permission;
 use std::collections::HashMap;
-use tauri::AppHandle;
+use tauri::Wry;
+type AppHandle = tauri::AppHandle<Wry>;
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 mod health;
@@ -422,7 +423,7 @@ async fn get_log_files(app: AppHandle) -> Result<Vec<LogFile>, String> {
     Ok(log_files)
 }
 
-fn get_data_dir(app: &tauri::AppHandle) -> anyhow::Result<PathBuf> {
+fn get_data_dir(app: &AppHandle) -> anyhow::Result<PathBuf> {
     // Create a new runtime for this synchronous function
 
     let store = get_store(app, None)?;
@@ -734,7 +735,6 @@ async fn main() {
 
             info!("Local data directory: {}", base_dir.display());
 
-
             let path = base_dir.join("store.bin");
             if !path.exists() {
                 let _ = File::create(path.clone()).unwrap();
@@ -847,7 +847,6 @@ async fn main() {
         }
         tauri::RunEvent::ExitRequested { .. } => {
             debug!("ExitRequested event");
-
 
             // Shutdown server
             if let Some(server_shutdown_tx) = app_handle.try_state::<mpsc::Sender<()>>() {

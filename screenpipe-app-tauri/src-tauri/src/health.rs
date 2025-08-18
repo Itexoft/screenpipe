@@ -1,7 +1,8 @@
 use anyhow::Result;
 use dark_light::Mode;
 use serde::Deserialize;
-use tauri::{path::BaseDirectory, Manager};
+use tauri::{path::BaseDirectory, Manager, Wry};
+type AppHandle = tauri::AppHandle<Wry>;
 use tokio::time::{interval, Duration};
 
 #[derive(Debug, Deserialize)]
@@ -23,7 +24,7 @@ struct HealthCheckResponse {
 }
 
 #[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
-pub async fn start_health_check(app: tauri::AppHandle) -> Result<()> {
+pub async fn start_health_check(app: AppHandle) -> Result<()> {
     let mut interval = interval(Duration::from_secs(1));
     let client = reqwest::Client::new();
     let mut last_status = String::new();

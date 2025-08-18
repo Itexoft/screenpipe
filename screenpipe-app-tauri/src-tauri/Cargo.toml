@@ -21,6 +21,7 @@ tauri = { version = "=2.1.1", features = [
   "devtools",
   "image-png",
   "image-ico",
+  "wry",
 ], default-features = false }
 tauri-utils = { version = "=2.1.0", features = [] }
 # plugins
@@ -90,7 +91,7 @@ tauri-plugin-cli = "2.0.0"
 tauri-plugin-global-shortcut = "2"
 
 [target.'cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))'.dependencies]
-tauri = { version = "=2.1.1", features = ["tray-icon"], default-features = false }
+tauri = { version = "=2.1.1", features = ["tray-icon", "wry"], default-features = false }
 
 [target."cfg(any(target_os = \"macos\", windows, target_os = \"linux\"))".dependencies]
 tauri-plugin-single-instance = { version = "2.0.0", features = ["deep-link"] }
