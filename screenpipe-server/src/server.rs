@@ -2131,11 +2131,6 @@ pub struct VisionDeviceControlRequest {
 //     }
 // }
 
-#[derive(Serialize)]
-pub struct VisionDeviceControlResponse {
-    success: bool,
-    message: String,
-}
 
 // async fn start_vision_device(
 //     State(state): State<Arc<AppState>>,

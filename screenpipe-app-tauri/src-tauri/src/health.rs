@@ -22,8 +22,7 @@ struct HealthCheckResponse {
     verbose_instructions: Option<String>,
 }
 
-/// Starts a background task that periodically checks the health of the sidecar
-/// and updates the tray icon accordingly.
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 pub async fn start_health_check(app: tauri::AppHandle) -> Result<()> {
     let mut interval = interval(Duration::from_secs(1));
     let client = reqwest::Client::new();
@@ -80,8 +79,7 @@ pub async fn start_health_check(app: tauri::AppHandle) -> Result<()> {
     Ok(())
 }
 
-/// Checks the health of the sidecar by making a request to its health endpoint.
-/// Returns an error if the sidecar is not running or not responding.
+#[cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 async fn check_health(client: &reqwest::Client) -> Result<HealthCheckResponse> {
     match client
         .get("http://localhost:3030/health")
