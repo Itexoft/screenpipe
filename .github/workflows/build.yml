@@ -1,0 +1,150 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: aarch64-apple-darwin
+          override: true
+          cache: true
+          rustflags: ""
+      - run: brew unlink pkg-config@0.29.2 || true
+      - run: brew install ffmpeg pkg-config
+      - run: brew link --overwrite pkg-config
+      - run: |
+          export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg/lib/pkgconfig:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_ALLOW_CROSS=1
+          export RUSTFLAGS="-C link-arg=-Wl,-rpath,@executable_path/../lib -C link-arg=-Wl,-rpath,@loader_path/../lib"
+          cargo build --release --features metal --target aarch64-apple-darwin
+      - run: |
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 0.0.0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - run: |
+          mkdir -p screenpipe-${{ env.VERSION }}-aarch64-apple-darwin/bin
+          cp target/aarch64-apple-darwin/release/screenpipe screenpipe-${{ env.VERSION }}-aarch64-apple-darwin/bin/
+          tar -czf screenpipe-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz -C screenpipe-${{ env.VERSION }}-aarch64-apple-darwin .
+      - run: |
+          mkdir -p screenpipe-app-tauri/src-tauri/bin
+          cp target/aarch64-apple-darwin/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe-aarch64-apple-darwin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-macos-aarch64
+          path: screenpipe-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+      - uses: oven-sh/setup-bun@v1
+      - run: pnpm install
+        working-directory: screenpipe-app-tauri
+      - run: pnpm run tauri build
+        working-directory: screenpipe-app-tauri
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-app-macos
+          path: screenpipe-app-tauri/src-tauri/target/release/bundle
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+      - run: sudo apt-get update && sudo apt-get install -y g++ ffmpeg tesseract-ocr cmake clang libavformat-dev libavfilter-dev libavdevice-dev libssl-dev libtesseract-dev libxdo-dev
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+      - uses: oven-sh/setup-bun@v1
+      - run: cargo build --release --target x86_64-unknown-linux-gnu
+      - run: |
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 0.0.0)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - run: |
+          mkdir -p screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu/bin
+          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu/bin/
+          tar -czf screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz -C screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu .
+      - run: |
+          mkdir -p screenpipe-app-tauri/src-tauri/bin
+          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe-x86_64-unknown-linux-gnu
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-linux-x86_64
+          path: screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz
+      - run: pnpm install
+        working-directory: screenpipe-app-tauri
+      - run: pnpm run tauri build
+        working-directory: screenpipe-app-tauri
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-app-linux
+          path: screenpipe-app-tauri/src-tauri/target/release/bundle
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-msvc
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+      - uses: oven-sh/setup-bun@v1
+      - run: |
+          $url = "https://7-zip.org/a/7z2301-x64.exe"
+          $installer = "7z-installer.exe"
+          Invoke-WebRequest -Uri $url -OutFile $installer
+          Start-Process -FilePath .\\$installer -Args "/S" -Wait
+          Remove-Item $installer
+          echo 'C:\\Program Files\\7-Zip' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: pwsh
+      - run: cargo build --release --target x86_64-pc-windows-msvc
+        shell: pwsh
+      - run: |
+          $VERSION = git describe --tags --abbrev=0 2>$null
+          if ($LASTEXITCODE -ne 0) { $VERSION = "0.0.0"; $LASTEXITCODE = 0 }
+          "VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append
+        shell: pwsh
+      - run: |
+          $packageDir = "screenpipe-$env:VERSION-x86_64-pc-windows-msvc"
+          New-Item -Path "$packageDir/bin" -ItemType Directory -Force
+          Copy-Item "target/x86_64-pc-windows-msvc/release/screenpipe.exe" "$packageDir/bin/"
+          Copy-Item "target/x86_64-pc-windows-msvc/release/onnxruntime.dll" "$packageDir/bin/" -ErrorAction SilentlyContinue
+          7z a "$packageDir.zip" "./$packageDir/*"
+        shell: pwsh
+      - run: |
+          New-Item -Path "screenpipe-app-tauri/src-tauri/bin" -ItemType Directory -Force
+          Copy-Item "target/x86_64-pc-windows-msvc/release/screenpipe.exe" "screenpipe-app-tauri/src-tauri/bin/screenpipe-x86_64-pc-windows-msvc.exe"
+        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-windows
+          path: screenpipe-*.zip
+      - run: pnpm install
+        working-directory: screenpipe-app-tauri
+      - run: pnpm run tauri build
+        working-directory: screenpipe-app-tauri
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-app-windows
+          path: screenpipe-app-tauri/src-tauri/target/release/bundle
