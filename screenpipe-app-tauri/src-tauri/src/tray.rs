@@ -25,17 +25,13 @@ struct MenuState {
     shortcuts: HashMap<String, String>,
 }
 
-pub fn setup_tray(app: &AppHandle, update_item: &tauri::menu::MenuItem<Wry>) -> Result<()> {
+pub fn setup_tray(app: &AppHandle) -> Result<()> {
     if let Some(main_tray) = app.tray_by_id("screenpipe_main") {
-        // Initial menu setup with empty state
-        let menu = create_dynamic_menu(app, &MenuState::default(), update_item)?;
+        let menu = create_dynamic_menu(app, &MenuState::default())?;
         main_tray.set_menu(Some(menu))?;
 
-        // Setup click handlers
         setup_tray_click_handlers(&main_tray)?;
-
-        // Start menu updater
-        setup_tray_menu_updater(app.clone(), update_item);
+        setup_tray_menu_updater(app.clone());
     }
     Ok(())
 }
@@ -43,7 +39,6 @@ pub fn setup_tray(app: &AppHandle, update_item: &tauri::menu::MenuItem<Wry>) -> 
 fn create_dynamic_menu(
     app: &AppHandle,
     state: &MenuState,
-    update_item: &tauri::menu::MenuItem<Wry>,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let store = get_store(app, None)?;
     let mut menu_builder = MenuBuilder::new(app);
@@ -63,15 +58,14 @@ fn create_dynamic_menu(
         .build(app)?,
     );
 
-    // Version and update items
+    // Version item
     menu_builder = menu_builder
         .item(&PredefinedMenuItem::separator(app)?)
         .item(
             &MenuItemBuilder::with_id("version", format!("version {}", app.package_info().version))
                 .enabled(false)
                 .build(app)?,
-        )
-        .item(update_item);
+        );
 
     // Only show recording controls if not in dev mode
     let dev_mode = store
@@ -185,10 +179,7 @@ fn handle_menu_event(app_handle: &AppHandle, event: tauri::menu::MenuEvent) {
     }
 }
 
-async fn update_menu_if_needed(
-    app: &AppHandle,
-    update_item: &tauri::menu::MenuItem<Wry>,
-) -> Result<()> {
+async fn update_menu_if_needed(app: &AppHandle) -> Result<()> {
     // Get current state
     let new_state = MenuState {
         pipes: get_active_pipes().await?,
@@ -208,13 +199,25 @@ async fn update_menu_if_needed(
 
     if should_update {
         if let Some(tray) = app.tray_by_id("screenpipe_main") {
-            let menu = create_dynamic_menu(app, &new_state, update_item)?;
+            let menu = create_dynamic_menu(app, &new_state)?;
             tray.set_menu(Some(menu))?;
             debug!("Updated tray menu with {} pipes", new_state.pipes.len());
         }
     }
 
     Ok(())
+}
+
+fn setup_tray_menu_updater(app: AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+        loop {
+            interval.tick().await;
+            if let Err(e) = update_menu_if_needed(&app).await {
+                error!("Failed to update tray menu: {:#}", e);
+            }
+        }
+    });
 }
 
 async fn get_active_pipes() -> Result<Vec<String>> {
@@ -255,18 +258,6 @@ fn get_current_shortcuts(app: &AppHandle) -> Result<HashMap<String, String>> {
     Ok(shortcuts)
 }
 
-pub fn setup_tray_menu_updater(app: AppHandle, update_item: &tauri::menu::MenuItem<Wry>) {
-    let update_item = update_item.clone();
-    tauri::async_runtime::spawn(async move {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
-        loop {
-            interval.tick().await;
-            if let Err(e) = update_menu_if_needed(&app, &update_item).await {
-                error!("Failed to update tray menu: {:#}", e);
-            }
-        }
-    });
-}
 
 fn format_shortcut(shortcut: &str) -> String {
     // Add parentheses inside the formatting to ensure consistent styling
