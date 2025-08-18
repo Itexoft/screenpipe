@@ -147,7 +147,6 @@
     "shell:default",
     "shell:allow-spawn",
     "dialog:default",
-    "updater:default",
     "os:default",
     "os:allow-arch",
     "os:allow-hostname",

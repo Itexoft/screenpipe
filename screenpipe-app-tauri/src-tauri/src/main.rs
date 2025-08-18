@@ -26,7 +26,6 @@ use tracing::{debug, error, info, warn};
 use tracing_appender::rolling::{RollingFileAppender, Rotation};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::EnvFilter;
-use updates::start_update_check;
 mod icons;
 
 mod commands;
@@ -36,7 +35,6 @@ mod server;
 mod sidecar;
 mod store;
 mod tray;
-mod updates;
 mod window_api;
 
 pub use server::*;
@@ -633,7 +631,6 @@ async fn main() {
             _ => {}
         })
         .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
@@ -653,7 +650,6 @@ async fn main() {
                 .set_focus()
                 .expect("Can't focus window!");
         }))
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(sidecar_state)
         .invoke_handler(tauri::generate_handler![
@@ -789,13 +785,8 @@ async fn main() {
                 debug!("Skipping sidecar spawn: dev_mode enabled");
             }
 
-            // Initialize update check
-            let update_manager = start_update_check(&app_handle, 5)?;
-
-            // Setup tray
             if let Some(_) = app_handle.tray_by_id("screenpipe_main") {
-                let update_item = update_manager.update_now_menu_item_ref().clone();
-                if let Err(e) = tray::setup_tray(&app_handle, &update_item) {
+                if let Err(e) = tray::setup_tray(&app_handle) {
                     error!("Failed to setup tray: {}", e);
                 }
             }
