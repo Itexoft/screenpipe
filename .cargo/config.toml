@@ -1,21 +1,10 @@
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-Ctarget-feature=-crt-static"]
 
-[target.x86_64-pc-windows-msvc.env]
+[env]
+CMAKE_POLICY_DEFAULT_CMP0091 = "NEW"
+CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
 CFLAGS = "/MD"
 CXXFLAGS = "/MD"
-CMAKE_C_FLAGS_RELEASE = "/MD"
-CMAKE_CXX_FLAGS_RELEASE = "/MD"
-CMAKE_C_FLAGS_DEBUG = "/MDd"
-CMAKE_CXX_FLAGS_DEBUG = "/MDd"
-CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
-KNF_STATIC_CRT = "0"
-
-[target.x86_64-unknown-linux-gnu]
-rustflags = ["-C", "link-arg=-Wl,--allow-multiple-definition"]
-
-[target.aarch64-apple-darwin]
-rustflags = "-lc++ -l framework=Accelerate"
-
-[env]
-CMAKE_POLICY_VERSION_MINIMUM = "3.5"
+CFLAGS_x86_64_pc_windows_msvc = "/MD"
+CXXFLAGS_x86_64_pc_windows_msvc = "/MD"

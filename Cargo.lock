@@ -3719,7 +3719,6 @@ dependencies = [
 [[package]]
 name = "knf-rs-sys"
 version = "0.2.4"
-source = "git+https://github.com/Neptune650/knf-rs.git#b782e6bb02db495ce767f0094c0aa6bca5dba61c"
 dependencies = [
  "bindgen 0.69.5",
  "cmake",

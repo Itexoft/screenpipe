@@ -90,6 +90,7 @@ on:
       CMAKE_C_FLAGS_DEBUG: "/MDd"
       CMAKE_CXX_FLAGS_DEBUG: "/MDd"
       CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+      CMAKE_POLICY_DEFAULT_CMP0091: "NEW"
       KNF_STATIC_CRT: "0"
     steps:
       - name: Checkout code
@@ -129,6 +130,9 @@ on:
             ~/.cargo/git/db/
           key: windows-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+      - run: cargo clean -p knf-rs-sys -p whisper-rs-sys -p libsamplerate-sys
+        shell: pwsh
+
       - name: Build CLI
         env:
           CARGO_PROFILE_RELEASE_STRIP: "symbols"
@@ -137,6 +141,20 @@ on:
           RUSTFLAGS: "-C link-arg=/LTCG"
         run: |
           cargo build --release --target x86_64-pc-windows-msvc
+
+      - run: |
+          $objs = Get-ChildItem "target/x86_64-pc-windows-msvc/release/build/knf-rs-sys-*/out/**/*.obj" -Recurse -ErrorAction SilentlyContinue
+          $bad = @()
+          foreach ($o in $objs) {
+            $d = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /directives $o.FullName 2>$null
+            if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $o.FullName }
+          }
+          if ($bad.Count -gt 0) {
+            Write-Host "Found static CRT directives in:"
+            $bad | ForEach-Object { Write-Host $_ }
+            exit 1
+          }
+        shell: pwsh
 
       - name: Set version
         shell: pwsh

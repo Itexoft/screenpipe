@@ -190,6 +190,19 @@ jobs:
       - run: cargo build --release --target x86_64-pc-windows-msvc -vv
         shell: pwsh
       - run: |
+          $objs = Get-ChildItem "target/x86_64-pc-windows-msvc/release/build/knf-rs-sys-*/out/**/*.obj" -Recurse -ErrorAction SilentlyContinue
+          $bad = @()
+          foreach ($o in $objs) {
+            $d = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /directives $o.FullName 2>$null
+            if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $o.FullName }
+          }
+          if ($bad.Count -gt 0) {
+            Write-Host "Found static CRT directives in:"
+            $bad | ForEach-Object { Write-Host $_ }
+            exit 1
+          }
+        shell: pwsh
+      - run: |
           $VERSION = git describe --tags --abbrev=0 2>$null
           if ($LASTEXITCODE -ne 0) { $VERSION = "0.0.0"; $LASTEXITCODE = 0 }
           "VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append
