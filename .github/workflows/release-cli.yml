@@ -82,7 +82,9 @@ on:
   build-windows:
     runs-on: windows-2022
     env:
-      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreadedDLL"
+      CMAKE_C_FLAGS_RELEASE: "/MD"
+      CMAKE_CXX_FLAGS_RELEASE: "/MD"
       KNF_STATIC_CRT: "0"
     steps:
       - name: Checkout code
