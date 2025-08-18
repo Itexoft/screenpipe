@@ -127,7 +127,7 @@ jobs:
             target: x86_64-apple-darwin
             tauri-args: "--target x86_64-apple-darwin"
             os_type: "macos"
-          - platform: "windows-2019"
+          - platform: "windows-2022"
             args: "--target x86_64-pc-windows-msvc --features mkl"
             pre-build-args: ""
             tauri-args: "--target x86_64-pc-windows-msvc"
