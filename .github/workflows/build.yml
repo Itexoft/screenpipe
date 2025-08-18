@@ -47,6 +47,8 @@ jobs:
       - uses: oven-sh/setup-bun@v1
       - run: pnpm install
         working-directory: screenpipe-app-tauri
+      - run: pnpm run build
+        working-directory: screenpipe-app-tauri
       - run: pnpm run tauri build
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4
@@ -86,6 +88,8 @@ jobs:
           name: screenpipe-linux-x86_64
           path: screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz
       - run: pnpm install
+        working-directory: screenpipe-app-tauri
+      - run: pnpm run build
         working-directory: screenpipe-app-tauri
       - run: pnpm run tauri build
         working-directory: screenpipe-app-tauri
