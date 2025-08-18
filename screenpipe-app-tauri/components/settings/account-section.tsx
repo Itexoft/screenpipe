@@ -37,7 +37,7 @@ function PlanCard({
 }: {
   title: string;
   price: string;
-  features: (string | JSX.Element)[];
+  features: (string | React.JSX.Element)[];
   isActive?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
