@@ -1,10 +1,12 @@
+[env]
+CFLAGS = ""
+CXXFLAGS = ""
+
 [target.x86_64-pc-windows-msvc]
 rustflags = ["-Ctarget-feature=-crt-static"]
 
-[env]
+[target.x86_64-pc-windows-msvc.env]
 CMAKE_POLICY_DEFAULT_CMP0091 = "NEW"
 CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
 CFLAGS = "/MD"
 CXXFLAGS = "/MD"
-CFLAGS_x86_64_pc_windows_msvc = "/MD"
-CXXFLAGS_x86_64_pc_windows_msvc = "/MD"
