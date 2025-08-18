@@ -55,7 +55,8 @@ jobs:
   test-windows:
     runs-on: windows-2022
     env:
-      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+      KNF_STATIC_CRT: "0"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4

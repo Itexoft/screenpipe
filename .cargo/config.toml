@@ -1,17 +1,5 @@
 [target.x86_64-pc-windows-msvc]
-rustflags = [
-  "-C",
-  "target-feature=+crt-static",
-  "-C",
-  "link-args=/DEFAULTLIB:ucrt.lib /DEFAULTLIB:libvcruntime.lib libcmt.lib",
-  "-C",
-  "link-args=/NODEFAULTLIB:libvcruntimed.lib /NODEFAULTLIB:vcruntime.lib /NODEFAULTLIB:vcruntimed.lib",
-  "-C",
-  "link-args=/NODEFAULTLIB:libcmtd.lib /NODEFAULTLIB:msvcrt.lib /NODEFAULTLIB:msvcrtd.lib",
-  "-C",
-  "link-args=/NODEFAULTLIB:libucrt.lib /NODEFAULTLIB:libucrtd.lib /NODEFAULTLIB:ucrtd.lib",
-
-]
+rustflags = []
 
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "link-arg=-Wl,--allow-multiple-definition"]
@@ -21,4 +9,5 @@ rustflags = "-lc++ -l framework=Accelerate"
 
 [env]
 CMAKE_POLICY_VERSION_MINIMUM = "3.5"
-CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreaded$<$<CONFIG:Debug>:Debug>"
+CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+KNF_STATIC_CRT = "0"
