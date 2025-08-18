@@ -57,7 +57,10 @@ jobs:
           path: screenpipe-app-tauri/src-tauri/target/release/bundle
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    env:
+      CFLAGS: ""
+      CXXFLAGS: ""
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -119,6 +122,7 @@ jobs:
             libgdk-pixbuf2.0-bin \
             libgtk-3-bin \
             desktop-file-utils
+      - run: pkg-config --modversion webkit2gtk-4.1
       - uses: pnpm/action-setup@v3
         with:
           version: 8
@@ -190,11 +194,11 @@ jobs:
       - run: cargo build --release --target x86_64-pc-windows-msvc -vv
         shell: pwsh
       - run: |
-          $objs = Get-ChildItem "target/x86_64-pc-windows-msvc/release/build/knf-rs-sys-*/out/**/*.obj" -Recurse -ErrorAction SilentlyContinue
+          $files = Get-ChildItem "target/x86_64-pc-windows-msvc/release" -Include *.obj,*.lib -Recurse -ErrorAction SilentlyContinue
           $bad = @()
-          foreach ($o in $objs) {
-            $d = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /directives $o.FullName 2>$null
-            if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $o.FullName }
+          foreach ($f in $files) {
+            $d = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /directives $f.FullName 2>$null
+            if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $f.FullName }
           }
           if ($bad.Count -gt 0) {
             Write-Host "Found static CRT directives in:"
