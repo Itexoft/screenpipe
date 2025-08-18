@@ -524,6 +524,11 @@ jobs:
             throw "No DLLs found in target directory!"
           }
 
+      - if: secrets.TAURI_PRIVATE_KEY == ''
+        working-directory: screenpipe-app-tauri/src-tauri
+        shell: bash
+        run: node -e "const fs=require('fs');const p='tauri.conf.json';const c=JSON.parse(fs.readFileSync(p));c.bundle.createUpdaterArtifacts=false;if(c.plugins&&c.plugins.updater){c.plugins.updater.active=false;}fs.writeFileSync(p,JSON.stringify(c));"
+
       - name: Build
         uses: tauri-apps/tauri-action@v0.5.17
         env:
