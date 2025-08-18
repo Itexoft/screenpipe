@@ -559,6 +559,7 @@ jobs:
           CARGO_PROFILE_RELEASE_INCREMENTAL: ${{ matrix.os_type == 'windows' && 'false' || 'true' }}
           RUSTFLAGS: ${{ matrix.os_type == 'windows' && '-C target-feature=+crt-static -C link-arg=/LTCG' || '' }}
           VCPKG_STATIC_LINKAGE: "true"
+          CMAKE_MSVC_RUNTIME_LIBRARY: ${{ matrix.os_type == 'windows' && 'MultiThreaded$<$<CONFIG:Debug>:Debug>' || '' }}
           KNF_STATIC_CRT: ${{ matrix.os_type == 'windows' && '1' || '' }}
         with:
           args: ${{ matrix.tauri-args }}
