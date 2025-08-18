@@ -58,4 +58,3 @@ app.py
 *.py3z
 __pycache__/
 
-vendor/
