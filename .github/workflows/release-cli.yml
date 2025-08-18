@@ -6,21 +6,7 @@
 name: Release CLI
 
 on:
-  push:
-    tags:
-      - "v*"
   workflow_dispatch:
-permissions:
-  contents: write
-jobs:
-  build-macos:
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        target: [x86_64-apple-darwin, aarch64-apple-darwin]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
       - name: Set up Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1

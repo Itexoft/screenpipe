@@ -1,5 +1,5 @@
 use chrono::Local;
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::env;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -10,9 +10,7 @@ use std::io::Write;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use sysinfo::{PidExt, ProcessExt, System, SystemExt};
-use tracing::debug;
-use tracing::trace;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 pub struct ResourceMonitor {
     start_time: Instant,

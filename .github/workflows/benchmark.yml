@@ -1,6 +1,7 @@
 name: Rust Benchmark
 
-on: [push]
+on:
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
