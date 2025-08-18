@@ -327,7 +327,13 @@ jobs:
             libgtk-3-dev \
             librsvg2-dev \
             patchelf \
-            libfuse2
+            libfuse2 \
+            gstreamer1.0-libav \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-ugly \
+            gstreamer1.0-tools
           # download old versions because of EGL issues, see https://github.com/h3poteto/fedistar/issues/1717
           mkdir -p /tmp/ubuntu-packages
           cd /tmp/ubuntu-packages
