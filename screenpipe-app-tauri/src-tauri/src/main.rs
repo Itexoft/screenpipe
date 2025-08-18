@@ -4,10 +4,8 @@
 use commands::load_pipe_config;
 use commands::save_pipe_config;
 use commands::show_main_window;
-use serde_json::json;
 use serde_json::Value;
 use std::env;
-use std::fs;
 use std::fs::File;
 use std::path::PathBuf;
 use std::sync::Arc;

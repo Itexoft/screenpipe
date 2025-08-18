@@ -326,12 +326,12 @@ mod linux_icon_cache {
     use gtk::prelude::{DeviceExt, IconThemeExt};
     use image::codecs::png::PngEncoder;
     use image::{
-        ColorType, DynamicImage, ExtendedColorType, ImageEncoder, ImageFormat, ImageReader,
+        ExtendedColorType, ImageEncoder,
     };
-    use ini::configparser::ini::Ini;
+    
     use lazy_static::lazy_static;
     use log::{error, info};
-    use resvg::tiny_skia::PixmapMut;
+    
     use resvg::{tiny_skia, usvg};
     use std::collections::HashMap;
     use std::io::Cursor;
@@ -426,9 +426,8 @@ mod linux_icon_cache {
             }
 
             // If icon isn't in the map, try loading the icon path
-            if let icon_path = self.get_icon_path_from_name(app_name).await? {
-                return self.load_icon_from_path(&icon_path);
-            }
+            let icon_path = self.get_icon_path_from_name(app_name).await?;
+            return self.load_icon_from_path(&icon_path);
 
             Err(format!("Icon for App '{}' not found", app_name))
         }

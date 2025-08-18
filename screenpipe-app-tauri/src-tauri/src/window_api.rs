@@ -46,7 +46,7 @@ pub async fn show_specific_window(
         .app_handle
         .set_activation_policy(tauri::ActivationPolicy::Accessory);
     let url = format!("http://localhost:{}{}", payload.port, payload.path);
-    let mut builder = tauri::WebviewWindowBuilder::new(
+    let builder = tauri::WebviewWindowBuilder::new(
         &state.app_handle,
         &payload.title,
         tauri::WebviewUrl::External(url.parse().unwrap()),

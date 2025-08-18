@@ -111,7 +111,14 @@ jobs:
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
             gstreamer1.0-plugins-ugly \
-            gstreamer1.0-tools
+            gstreamer1.0-tools \
+            libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-dev \
+            libsoup-3.0-dev \
+            libglib2.0-bin \
+            libgdk-pixbuf2.0-bin \
+            libgtk-3-bin \
+            desktop-file-utils
       - uses: pnpm/action-setup@v3
         with:
           version: 8
@@ -136,7 +143,7 @@ jobs:
         working-directory: screenpipe-app-tauri
       - run: pnpm run build
         working-directory: screenpipe-app-tauri
-      - run: pnpm run tauri build
+      - run: pnpm run tauri build -- -vvv
         working-directory: screenpipe-app-tauri
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
