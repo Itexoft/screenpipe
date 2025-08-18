@@ -168,7 +168,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     // Initialize Sentry only if telemetry is enabled
-    let _sentry_guard = None;
+    let _sentry_guard: Option<()> = None;
 
     let local_data_dir = get_base_dir(&cli.data_dir)?;
     let local_data_dir_clone = local_data_dir.clone();
