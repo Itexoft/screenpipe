@@ -2,7 +2,6 @@ use crate::operator::element::UIElementImpl;
 use crate::operator::platforms::AccessibilityEngine;
 use crate::operator::ClickResult;
 use crate::operator::{AutomationError, Locator, Selector, UIElement, UIElementAttributes};
-use std::error::Error;
 use std::sync::Arc;
 use std::fmt::Debug;
 use std::hash::{Hash, Hasher};
@@ -19,7 +18,7 @@ use std::collections::{
     hash_map::DefaultHasher
 };
 use uiautomation::types::{
-    Point, PropertyConditionFlags, ScrollAmount, TreeScope, UIProperty
+    Point, ScrollAmount, TreeScope, UIProperty
 };
 
 // thread-safety
@@ -546,32 +545,17 @@ impl UIElementImpl for WindowsUIElement {
     }
 
     fn type_text(&self, text: &str) -> Result<(), AutomationError> {
-        let control_type = self.element.0.get_control_type()
+        let keyboard = Keyboard::default();
+        keyboard.send_text(text)
             .map_err(|e| AutomationError::PlatformError(e.to_string()))?;
-        // check if element accepts input
-        println!("control_type: {:#?}", control_type);
-        // if control_type == ControlType::Edit {
-            let keyboard = Keyboard::default();
-            keyboard.send_text(text)
-                .map_err(|e| AutomationError::PlatformError(e.to_string()))?;
-            Ok(())
-        // } else {
-        //     Err(AutomationError::PlatformError("Element is not editable".to_string()))
-        // }
+        Ok(())
     }
 
     fn press_key(&self, key: &str) -> Result<(), AutomationError> {
-        let control_type = self.element.0.get_control_type()
+        let keyboard = Keyboard::default();
+        keyboard.send_keys(key)
             .map_err(|e| AutomationError::PlatformError(e.to_string()))?;
-        // check if element accepts input, similar :D
-        // if control_type == ControlType::Edit {
-            let keyboard = Keyboard::default();
-            keyboard.send_keys(key)
-                .map_err(|e| AutomationError::PlatformError(e.to_string()))?;
-            Ok(())
-        // } else {
-        //     Err(AutomationError::PlatformError("Element is not editable".to_string()))
-        // }
+        Ok(())
     }
 
     fn get_text(&self, max_depth: usize) -> Result<String, AutomationError> {
