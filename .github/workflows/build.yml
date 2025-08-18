@@ -149,13 +149,12 @@ jobs:
     runs-on: windows-latest
     env:
       RUSTFLAGS: "-Ctarget-feature=-crt-static"
+      CMAKE_POLICY_DEFAULT_CMP0091: "NEW"
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
       CFLAGS: "/MD"
       CXXFLAGS: "/MD"
-      CMAKE_C_FLAGS_RELEASE: "/MD"
-      CMAKE_CXX_FLAGS_RELEASE: "/MD"
-      CMAKE_C_FLAGS_DEBUG: "/MDd"
-      CMAKE_CXX_FLAGS_DEBUG: "/MDd"
-      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
+      CFLAGS_x86_64_pc_windows_msvc: "/MD"
+      CXXFLAGS_x86_64_pc_windows_msvc: "/MD"
       KNF_STATIC_CRT: "0"
     steps:
       - uses: actions/checkout@v4
@@ -179,7 +178,9 @@ jobs:
           Remove-Item $installer
           echo 'C:\\Program Files\\7-Zip' | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         shell: pwsh
-      - run: cargo build --release --target x86_64-pc-windows-msvc
+      - run: cargo clean -p whisper-rs-sys -p knf-rs-sys -p libsamplerate-sys
+        shell: pwsh
+      - run: cargo build --release --target x86_64-pc-windows-msvc -vv
         shell: pwsh
       - run: |
           $VERSION = git describe --tags --abbrev=0 2>$null
