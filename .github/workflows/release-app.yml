@@ -139,6 +139,16 @@ jobs:
             os_type: "linux"
 
     runs-on: ${{ matrix.platform }}
+    env:
+      RUSTFLAGS: ${{ matrix.os_type == 'windows' && '-Ctarget-feature=-crt-static' || '' }}
+      CFLAGS: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+      CXXFLAGS: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+      CMAKE_C_FLAGS_RELEASE: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+      CMAKE_CXX_FLAGS_RELEASE: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+      CMAKE_C_FLAGS_DEBUG: ${{ matrix.os_type == 'windows' && '/MDd' || '' }}
+      CMAKE_CXX_FLAGS_DEBUG: ${{ matrix.os_type == 'windows' && '/MDd' || '' }}
+      CMAKE_MSVC_RUNTIME_LIBRARY: ${{ matrix.os_type == 'windows' && 'MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' || '' }}
+      KNF_STATIC_CRT: ${{ matrix.os_type == 'windows' && '0' || '' }}
     steps:
       - name: Enable Git long paths on Windows
         if: matrix.os_type == 'windows'
@@ -558,10 +568,16 @@ jobs:
           CARGO_PROFILE_RELEASE_STRIP: ${{ matrix.os_type == 'windows' && 'symbols' || 'none' }}
           CARGO_PROFILE_RELEASE_PANIC: ${{ matrix.os_type == 'windows' && 'abort' || 'unwind' }}
           CARGO_PROFILE_RELEASE_INCREMENTAL: ${{ matrix.os_type == 'windows' && 'false' || 'true' }}
-          RUSTFLAGS: ${{ matrix.os_type == 'windows' && '-C link-arg=/LTCG' || '' }}
-          VCPKG_STATIC_LINKAGE: "true"
-          CMAKE_MSVC_RUNTIME_LIBRARY: ${{ matrix.os_type == 'windows' && 'MultiThreadedDLL$<$<CONFIG:Debug>:Debug>' || '' }}
-          KNF_STATIC_CRT: ${{ matrix.os_type == 'windows' && '0' || '' }}
+            RUSTFLAGS: ${{ matrix.os_type == 'windows' && '-Ctarget-feature=-crt-static -C link-arg=/LTCG' || '' }}
+            VCPKG_STATIC_LINKAGE: "true"
+            CMAKE_MSVC_RUNTIME_LIBRARY: ${{ matrix.os_type == 'windows' && 'MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' || '' }}
+            CFLAGS: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+            CXXFLAGS: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+            CMAKE_C_FLAGS_RELEASE: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+            CMAKE_CXX_FLAGS_RELEASE: ${{ matrix.os_type == 'windows' && '/MD' || '' }}
+            CMAKE_C_FLAGS_DEBUG: ${{ matrix.os_type == 'windows' && '/MDd' || '' }}
+            CMAKE_CXX_FLAGS_DEBUG: ${{ matrix.os_type == 'windows' && '/MDd' || '' }}
+            KNF_STATIC_CRT: ${{ matrix.os_type == 'windows' && '0' || '' }}
         with:
           args: ${{ matrix.tauri-args }}
           projectPath: "./screenpipe-app-tauri"

@@ -56,9 +56,14 @@ jobs:
     name: Run Windows OCR benchmark
     runs-on: windows-latest
     env:
-      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreadedDLL"
+      RUSTFLAGS: "-Ctarget-feature=-crt-static"
+      CFLAGS: "/MD"
+      CXXFLAGS: "/MD"
       CMAKE_C_FLAGS_RELEASE: "/MD"
       CMAKE_CXX_FLAGS_RELEASE: "/MD"
+      CMAKE_C_FLAGS_DEBUG: "/MDd"
+      CMAKE_CXX_FLAGS_DEBUG: "/MDd"
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
       KNF_STATIC_CRT: "0"
     steps:
       - uses: actions/checkout@v4
