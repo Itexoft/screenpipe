@@ -1,8 +1,10 @@
 [target.x86_64-pc-windows-msvc]
-rustflags = []
+rustflags = ["-Ctarget-feature=-crt-static"]
 
 [target.x86_64-pc-windows-msvc.env]
-CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL$<$<CONFIG:Debug>:Debug>"
+CMAKE_MSVC_RUNTIME_LIBRARY = "MultiThreadedDLL"
+CMAKE_C_FLAGS_RELEASE = "/MD"
+CMAKE_CXX_FLAGS_RELEASE = "/MD"
 KNF_STATIC_CRT = "0"
 
 [target.x86_64-unknown-linux-gnu]
