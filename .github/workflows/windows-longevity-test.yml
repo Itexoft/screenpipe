@@ -1,11 +1,7 @@
 name: Windows CLI Longevity Test
 
 on:
-  schedule:
-    # Run once every 6 hours
-    - cron: '0 */6 * * *'
   workflow_dispatch:
-    # Allow manual triggering of the workflow
 
 jobs:
   test-windows:

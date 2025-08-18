@@ -5,19 +5,6 @@ name: Release App
 
 on:
   workflow_dispatch:
-    inputs:
-      commit_hash:
-        description: "Commit hash to build from (optional)"
-        required: false
-      version:
-        description: "Version to set in Cargo.toml (required if commit_hash is provided)"
-        required: false
-      needs_testing:
-        description: "Whether this release needs community testing"
-        type: boolean
-        default: false
-  push:
-    branches: [main]
 
 jobs:
   check_commit:
