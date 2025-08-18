@@ -81,6 +81,8 @@ on:
 
   build-windows:
     runs-on: windows-2022
+    env:
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

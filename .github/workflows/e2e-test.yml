@@ -7,6 +7,8 @@ jobs:
   windows-e2e-test:
     name: Windows E2E Tests
     runs-on: windows-latest
+    env:
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     steps:
     - uses: actions/checkout@v4
 

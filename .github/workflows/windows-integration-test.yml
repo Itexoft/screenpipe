@@ -6,6 +6,8 @@ on:
 jobs:
   test-windows:
     runs-on: windows-2022
+    env:
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     steps:
     - uses: actions/checkout@v4
 

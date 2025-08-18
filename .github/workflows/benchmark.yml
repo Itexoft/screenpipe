@@ -55,6 +55,8 @@ jobs:
   windows_ocr_benchmark:
     name: Run Windows OCR benchmark
     runs-on: windows-latest
+    env:
+      CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
