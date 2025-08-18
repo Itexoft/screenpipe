@@ -9,6 +9,7 @@ btw, we prefer that you don't contribute if you are not using or will use the pr
 before you begin:
 - try to run the [pre-built app](https://docs.screenpi.pe) to get familiar with the project
 - familiarize yourself with the project structure and architecture.
+- run `./scripts/install-deps.sh` to install node dependencies across all packages
 
 ## installation and build guide
 
