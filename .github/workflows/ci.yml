@@ -64,7 +64,7 @@ jobs:
           path: |
             ~\AppData\Local\cargo\
             target\
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-${{ env.KNF_STATIC_CRT }}-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
