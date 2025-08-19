@@ -5,7 +5,7 @@ use anyhow::Result;
 pub async fn perform_ocr_windows(image: &DynamicImage) -> Result<(String, String, Option<f64>)> {
     use std::io::Cursor;
     use windows::{
-        Graphics::Imaging::BitmapDecoder,
+        Graphics::Imaging::{BitmapDecoder, SoftwareBitmap},
         Media::Ocr::OcrEngine as WindowsOcrEngine,
         Storage::Streams::{DataWriter, InMemoryRandomAccessStream},
     };
@@ -25,17 +25,16 @@ pub async fn perform_ocr_windows(image: &DynamicImage) -> Result<(String, String
     let stream = InMemoryRandomAccessStream::new()?;
     let writer = DataWriter::CreateDataWriter(&stream)?;
     writer.WriteBytes(&buffer)?;
-    writer.StoreAsync()?.get()?;
-    writer.FlushAsync()?.get()?;
+    writer.StoreAsync()?.await?;
+    writer.FlushAsync()?.await?;
     stream.Seek(0)?;
 
-    let decoder = BitmapDecoder::CreateWithIdAsync(BitmapDecoder::PngDecoderId()?, &stream)?
-        .get()?;
+    let decoder = BitmapDecoder::CreateAsync(BitmapDecoder::PngDecoderId()?, &stream)?.await?;
 
-    let bitmap = decoder.GetSoftwareBitmapAsync()?.get()?;
+    let bitmap: SoftwareBitmap = decoder.GetSoftwareBitmapAsync()?.await?;
 
     let engine = WindowsOcrEngine::TryCreateFromUserProfileLanguages()?;
-    let result = engine.RecognizeAsync(&bitmap)?.get()?;
+    let result = engine.RecognizeAsync(&bitmap)?.await?;
 
     let text = result.Text()?.to_string();
 
