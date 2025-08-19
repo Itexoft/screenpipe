@@ -36,7 +36,6 @@ function copy(src, base) {
 
 const screenpipeSrc = path.join(repoRoot, "target", triple, "release", `screenpipe${ext}`);
 copy(screenpipeSrc, "screenpipe");
-
-const bunCmd = plat === "win32" ? "where bun" : "which bun";
-const bunSrc = execSync(bunCmd).toString().trim().split(/\r?\n/)[0];
+const bunHome = process.env.BUN_INSTALL || path.join(os.homedir(), ".bun");
+const bunSrc = path.join(bunHome, "bin", `bun${ext}`);
 copy(bunSrc, "bun");
