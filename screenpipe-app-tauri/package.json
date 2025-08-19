@@ -6,9 +6,9 @@
     "test:e2e": "wdio run wdio.conf.js",
     "test:e2e:terminator": "mocha",
     "build": "next build",
-    "predev": "bun scripts/pre_build.js",
-    "prebuild": "bun scripts/pre_build.js",
-    "pretauri": "bun scripts/pre_build.js",
+    "predev": "node scripts/pre_build.cjs",
+    "prebuild": "node scripts/pre_build.cjs",
+    "pretauri": "node scripts/pre_build.cjs",
     "tauri": "tauri",
     "clean": "rm -rf out && cargo clean && rm -rf src-tauri/{screenpipe-*,tesseract-*,ffmpeg*,bun*,ollama*,ui_monitor*} node_modules"
   },

@@ -6,6 +6,8 @@ on:
 jobs:
   build-macos:
     runs-on: macos-latest
+    env:
+      SCREENPIPE_TARGET_TRIPLE: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,8 +56,9 @@ jobs:
           path: screenpipe-app-tauri/src-tauri/target/release/bundle
 
   build-linux:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     env:
+      SCREENPIPE_TARGET_TRIPLE: x86_64-unknown-linux-gnu
       CFLAGS: ""
       CXXFLAGS: ""
     steps:
@@ -153,6 +156,7 @@ jobs:
   build-windows:
     runs-on: windows-latest
     env:
+      SCREENPIPE_TARGET_TRIPLE: x86_64-pc-windows-msvc
       RUSTFLAGS: "-Ctarget-feature=-crt-static"
       CMAKE_POLICY_DEFAULT_CMP0091: "NEW"
       CMAKE_MSVC_RUNTIME_LIBRARY: "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL"
