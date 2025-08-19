@@ -33,9 +33,6 @@ jobs:
           mkdir -p screenpipe-${{ env.VERSION }}-aarch64-apple-darwin/bin
           cp target/aarch64-apple-darwin/release/screenpipe screenpipe-${{ env.VERSION }}-aarch64-apple-darwin/bin/
           tar -czf screenpipe-${{ env.VERSION }}-aarch64-apple-darwin.tar.gz -C screenpipe-${{ env.VERSION }}-aarch64-apple-darwin .
-      - run: |
-          mkdir -p screenpipe-app-tauri/src-tauri/bin
-          cp target/aarch64-apple-darwin/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe-aarch64-apple-darwin
       - uses: actions/upload-artifact@v4
         with:
           name: screenpipe-macos-aarch64
@@ -136,9 +133,6 @@ jobs:
           mkdir -p screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu/bin
           cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu/bin/
           tar -czf screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu.tar.gz -C screenpipe-${{ env.VERSION }}-x86_64-unknown-linux-gnu .
-      - run: |
-          mkdir -p screenpipe-app-tauri/src-tauri/bin
-          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe-x86_64-unknown-linux-gnu
       - uses: actions/upload-artifact@v4
         with:
           name: screenpipe-linux-x86_64
@@ -191,6 +185,10 @@ jobs:
         shell: pwsh
       - run: cargo clean -p whisper-rs-sys -p knf-rs-sys -p libsamplerate-sys
         shell: pwsh
+      - run: |
+          echo CMAKE_MSVC_RUNTIME_LIBRARY=$env:CMAKE_MSVC_RUNTIME_LIBRARY
+          echo RUSTFLAGS=$env:RUSTFLAGS
+        shell: pwsh
       - run: cargo build --release --target x86_64-pc-windows-msvc -vv
         shell: pwsh
       - run: |
@@ -217,10 +215,6 @@ jobs:
           Copy-Item "target/x86_64-pc-windows-msvc/release/screenpipe.exe" "$packageDir/bin/"
           Copy-Item "target/x86_64-pc-windows-msvc/release/onnxruntime.dll" "$packageDir/bin/" -ErrorAction SilentlyContinue
           7z a "$packageDir.zip" "./$packageDir/*"
-        shell: pwsh
-      - run: |
-          New-Item -Path "screenpipe-app-tauri/src-tauri/bin" -ItemType Directory -Force
-          Copy-Item "target/x86_64-pc-windows-msvc/release/screenpipe.exe" "screenpipe-app-tauri/src-tauri/bin/screenpipe-x86_64-pc-windows-msvc.exe"
         shell: pwsh
       - uses: actions/upload-artifact@v4
         with:
