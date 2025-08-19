@@ -49,9 +49,7 @@ version = "0.6.12"
 version = "0.16.1"
 
 [dependencies.ort]
-version = "=2.0.0-rc.10"
-default-features = false
-features = ["load-dynamic"]
+workspace = true
 
 [dependencies.ringbuffer]
 version = "0.15.0"

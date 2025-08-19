@@ -1,6 +1,7 @@
 use eyre::{bail, Result};
 use ndarray::{Array1, Array2, Array3, ArrayBase, Ix1, Ix3, OwnedRepr};
 use ort::session::Session;
+use ort::value::Value;
 use std::path::Path;
 
 use crate::{session, vad_result::VadResult};
@@ -33,38 +34,22 @@ impl Vad {
 
     pub fn compute(&mut self, samples: &[f32]) -> Result<VadResult> {
         let samples_tensor = Array2::from_shape_vec((1, samples.len()), samples.to_vec())?;
+        let input_val = Value::from_array(samples_tensor)?;
+        let sr_val = Value::from_array(self.sample_rate_tensor.clone())?;
+        let h_val = Value::from_array(self.h_tensor.clone())?;
+        let c_val = Value::from_array(self.c_tensor.clone())?;
         let result = self.session.run(ort::inputs![
-            "input" => samples_tensor.view(),
-            "sr" => self.sample_rate_tensor.view(),
-            "h" => self.h_tensor.view(),
-            "c" => self.c_tensor.view()
-        ]?)?;
-
-        // Update internal state tensors.
-        self.h_tensor = result
-            .get("hn")
-            .unwrap()
-            .try_extract_tensor::<f32>()
-            .unwrap()
-            .to_owned()
-            .into_shape_with_order((2, 1, 64))
-            .expect("Shape mismatch for h_tensor");
-        self.c_tensor = result
-            .get("cn")
-            .unwrap()
-            .try_extract_tensor::<f32>()
-            .unwrap()
-            .to_owned()
-            .into_shape_with_order((2, 1, 64))
-            .expect("Shape mismatch for h_tensor");
-
-        let prob = *result
-            .get("output")
-            .unwrap()
-            .try_extract_tensor::<f32>()
-            .unwrap()
-            .first()
-            .unwrap();
+            "input" => input_val,
+            "sr" => sr_val,
+            "h" => h_val,
+            "c" => c_val
+        ])?;
+        let (_, hn_data) = result["hn"].try_extract_tensor::<f32>()?;
+        self.h_tensor = ndarray::Array::from_shape_vec((2, 1, 64), hn_data.to_vec())?;
+        let (_, cn_data) = result["cn"].try_extract_tensor::<f32>()?;
+        self.c_tensor = ndarray::Array::from_shape_vec((2, 1, 64), cn_data.to_vec())?;
+        let (_, out_data) = result["output"].try_extract_tensor::<f32>()?;
+        let prob = *out_data.first().unwrap_or(&0.0);
         Ok(VadResult { prob })
     }
 

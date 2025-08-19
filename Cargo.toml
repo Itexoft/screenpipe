@@ -7,6 +7,7 @@ members = [
     "screenpipe-integrations",
     "screenpipe-events",
     "screenpipe-db",
+    "vendor/vad-rs",
 ]
 exclude = ["screenpipe-app-tauri/src-tauri"]
 resolver = "2"
@@ -50,7 +51,7 @@ windows = "0.52.0"
 windows-core = "0.52.0"
 windows-targets = "0.52.0"
 windows-sys = "0.52.0"
-ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic"] }
+ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"] }
 ort-sys = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic"] }
 
 http-cache-reqwest = "0.15.0"
