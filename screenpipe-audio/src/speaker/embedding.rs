@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use ndarray::Array2;
-use ort::Session;
+use ort::session::Session;
+use ort::value::Value;
 use std::path::Path;
 
 #[derive(Debug)]
@@ -17,20 +18,17 @@ impl EmbeddingExtractor {
         let features: Array2<f32> = knf_rs::compute_fbank(samples)
             .map_err(anyhow::Error::msg)
             .context("compute_fbank failed")?;
-        let features = features.insert_axis(ndarray::Axis(0)); // Add batch dimension
-        let inputs = ort::inputs! ["feats" => features.view()]?;
-
+        let features = features.insert_axis(ndarray::Axis(0));
+        let alloc = self.session.allocator();
+        let feats_val = Value::from_array(alloc, &features)?;
+        let inputs = ort::inputs!["feats" => feats_val];
         let ort_outs = self.session.run(inputs)?;
-        let ort_out = ort_outs
+        let (_, data) = ort_outs
             .get("embs")
             .context("Output tensor not found")?
             .try_extract_tensor::<f32>()
             .context("Failed to extract tensor")?;
-
-        // Collect the tensor data into a Vec to own it
-        let embeddings: Vec<f32> = ort_out.iter().copied().collect();
-
-        // Return an iterator over the Vec
+        let embeddings: Vec<f32> = data.to_vec();
         Ok(embeddings.into_iter())
     }
 }
