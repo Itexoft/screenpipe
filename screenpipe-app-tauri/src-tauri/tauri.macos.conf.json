@@ -11,7 +11,7 @@
         },
         "externalBin": [
             "binaries/screenpipe",
-            "bun",
+            "binaries/bun",
             "ui_monitor",
             "ffmpeg",
             "ffprobe"

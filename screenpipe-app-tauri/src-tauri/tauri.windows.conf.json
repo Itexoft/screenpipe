@@ -9,7 +9,7 @@
         },
         "externalBin": [
             "binaries/screenpipe",
-            "bun"
+            "binaries/bun"
         ],
         "targets": [
             "nsis"
