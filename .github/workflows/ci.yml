@@ -24,6 +24,27 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Metadata
+        if: runner.os != 'Windows'
+        run: cargo metadata --format-version 1 | jq -r '.packages[].name'
+
+      - name: Metadata (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          (cargo metadata --format-version 1) | ConvertFrom-Json | % packages | % name
+
+      - name: Configure FFmpeg
+        if: runner.os == 'macOS'
+        run: |
+          echo "PKG_CONFIG_PATH=$(brew --prefix ffmpeg)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          pkg-config --exists libavcodec
+          pkg-config --exists libavformat
+
+      - name: Clean
+        if: runner.os == 'Windows'
+        run: cargo clean -p screenpipe-vision
+
       - name: Build
         run: cargo build --workspace --all-targets --verbose
 
