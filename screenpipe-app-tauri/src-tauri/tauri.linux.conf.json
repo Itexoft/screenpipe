@@ -1,8 +1,8 @@
 {
     "bundle": {
         "externalBin": [
-            "screenpipe",
-            "bun"
+            "binaries/screenpipe",
+            "binaries/bun"
         ],
         "linux": {
             "deb": {
