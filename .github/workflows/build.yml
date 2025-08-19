@@ -156,7 +156,7 @@ jobs:
         working-directory: screenpipe-app-tauri
       - run: pnpm run build
         working-directory: screenpipe-app-tauri
-      - run: pnpm run tauri build -- -vvv
+      - run: pnpm run tauri build -- --quiet
         working-directory: screenpipe-app-tauri
         env:
           APPIMAGE_EXTRACT_AND_RUN: '1'
