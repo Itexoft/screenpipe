@@ -59,6 +59,8 @@ jobs:
           version: 8
           run_install: false
       - uses: oven-sh/setup-bun@v1
+      - run: node ./scripts/pre_build.cjs
+        working-directory: screenpipe-app-tauri
       - run: pnpm install
         working-directory: screenpipe-app-tauri
       - run: pnpm run build
@@ -195,7 +197,7 @@ jobs:
           version: 8
           run_install: false
       - uses: oven-sh/setup-bun@v1
-      - run: choco install jq -y
+      - run: choco install jq ffmpeg -y
         shell: pwsh
       - run: |
           rustup component add clippy rustfmt rust-src
@@ -246,6 +248,16 @@ jobs:
         shell: pwsh
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
+        shell: pwsh
+      - run: |
+          $ffmpegSrc = Join-Path $env:ChocolateyInstall 'lib\ffmpeg\tools\ffmpeg'
+          Copy-Item $ffmpegSrc 'screenpipe-app-tauri\src-tauri\ffmpeg' -Recurse -Force
+          if (!(Test-Path 'screenpipe-app-tauri\src-tauri\ffmpeg\lib')) {
+            New-Item -ItemType Directory -Path 'screenpipe-app-tauri\src-tauri\ffmpeg\lib' | Out-Null
+          }
+          if (-not (Get-ChildItem 'screenpipe-app-tauri\src-tauri\ffmpeg\lib' -File | Select-Object -First 1)) {
+            New-Item -ItemType File -Path 'screenpipe-app-tauri\src-tauri\ffmpeg\lib\placeholder' | Out-Null
+          }
         shell: pwsh
       - run: |
           $VERSION = git describe --tags --abbrev=0 2>$null
