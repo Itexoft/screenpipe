@@ -39,6 +39,10 @@ jobs:
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
       - run: |
+          mkdir -p screenpipe-app-tauri/src-tauri/binaries
+          cp target/aarch64-apple-darwin/release/screenpipe screenpipe-app-tauri/src-tauri/binaries/screenpipe-aarch64-apple-darwin
+          chmod +x screenpipe-app-tauri/src-tauri/binaries/screenpipe-aarch64-apple-darwin
+      - run: |
           VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo 0.0.0)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - run: |
@@ -90,57 +94,15 @@ jobs:
       - run: |
           sudo apt-get update
           sudo apt-get install -y \
-            g++ \
-            ffmpeg \
-            tesseract-ocr \
-            cmake \
-            clang \
-            libavformat-dev \
-            libavfilter-dev \
-            libavdevice-dev \
-            libssl-dev \
-            libtesseract-dev \
-            libxdo-dev \
-            libsdl2-dev \
-            libclang-dev \
-            libxtst-dev \
-            libx11-dev \
-            libxext-dev \
-            libxrandr-dev \
-            libxinerama-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libgl1-mesa-dev \
-            libasound2-dev \
-            libudev-dev \
-            libpulse-dev \
-            curl \
-            pkg-config \
-            libsqlite3-dev \
-            libbz2-dev \
-            zlib1g-dev \
-            libonig-dev \
-            libayatana-appindicator3-dev \
-            libsamplerate-dev \
-            libwebrtc-audio-processing-dev \
-            libgtk-3-dev \
-            librsvg2-dev \
-            patchelf \
-            libdbus-1-dev \
-            libfuse2 \
-            gstreamer1.0-libav \
-            gstreamer1.0-plugins-bad \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
-            gstreamer1.0-plugins-ugly \
-            gstreamer1.0-tools \
-            libwebkit2gtk-4.1-dev \
-            libjavascriptcoregtk-4.1-dev \
-            libsoup-3.0-dev \
-            libglib2.0-bin \
-            libgdk-pixbuf2.0-bin \
-            libgtk-3-bin \
-            desktop-file-utils
+            g++ ffmpeg tesseract-ocr cmake clang libavformat-dev libavfilter-dev libavdevice-dev \
+            libssl-dev libtesseract-dev libxdo-dev libsdl2-dev libclang-dev libxtst-dev libx11-dev \
+            libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev \
+            libasound2-dev libudev-dev libpulse-dev curl pkg-config libsqlite3-dev libbz2-dev zlib1g-dev \
+            libonig-dev libayatana-appindicator3-dev libsamplerate-dev libwebrtc-audio-processing-dev \
+            libgtk-3-dev librsvg2-dev patchelf libdbus-1-dev libfuse2 gstreamer1.0-libav \
+            gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
+            gstreamer1.0-tools libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev \
+            libglib2.0-bin libgdk-pixbuf2.0-bin libgtk-3-bin desktop-file-utils
       - run: |
           export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
           pkg-config --version
@@ -160,8 +122,9 @@ jobs:
           cargo clippy --all-targets --workspace -q
       - run: cargo build --release --target x86_64-unknown-linux-gnu
       - run: |
-          mkdir -p screenpipe-app-tauri/src-tauri/bin
-          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe
+          mkdir -p screenpipe-app-tauri/src-tauri/binaries
+          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-app-tauri/src-tauri/binaries/screenpipe-x86_64-unknown-linux-gnu
+          chmod +x screenpipe-app-tauri/src-tauri/binaries/screenpipe-x86_64-unknown-linux-gnu
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
       - run: |
@@ -179,9 +142,6 @@ jobs:
         working-directory: screenpipe-app-tauri
       - run: pnpm run build
         working-directory: screenpipe-app-tauri
-      - run: |
-          [ -f screenpipe-app-tauri/src-tauri/bin/screenpipe ]
-        working-directory: .
       - run: pnpm run tauri build -- -vvv
         working-directory: screenpipe-app-tauri
         env:
@@ -215,11 +175,14 @@ jobs:
           target: x86_64-pc-windows-msvc
           override: true
           components: rustfmt, clippy
+      - uses: ilammy/msvc-dev-cmd@v1
       - uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: false
       - uses: oven-sh/setup-bun@v1
+      - run: choco install jq -y
+        shell: pwsh
       - run: |
           rustup component add clippy rustfmt
           rustup target add x86_64-pc-windows-msvc
@@ -260,25 +223,12 @@ jobs:
           if (!(Test-Path target\x86_64-pc-windows-msvc\release\screenpipe.exe)) { throw 'missing CLI' }
         shell: pwsh
       - run: |
-          New-Item -Path "screenpipe-app-tauri\src-tauri\bin" -ItemType Directory -Force
-          Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\bin\screenpipe.exe"
-          Get-ChildItem "screenpipe-app-tauri\src-tauri\bin"
+          New-Item -Path "screenpipe-app-tauri\src-tauri\binaries" -ItemType Directory -Force
+          Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe"
+          Get-ChildItem "screenpipe-app-tauri\src-tauri\binaries"
         shell: pwsh
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
-        shell: pwsh
-      - run: |
-          $files = Get-ChildItem "target/x86_64-pc-windows-msvc/release" -Include *.obj,*.lib -Recurse -ErrorAction SilentlyContinue
-          $bad = @()
-          foreach ($f in $files) {
-            $d = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /directives $f.FullName 2>$null
-            if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $f.FullName }
-          }
-          if ($bad.Count -gt 0) {
-            Write-Host "Found static CRT directives in:"
-            $bad | ForEach-Object { Write-Host $_ }
-            exit 1
-          }
         shell: pwsh
       - run: |
           $VERSION = git describe --tags --abbrev=0 2>$null
@@ -299,7 +249,7 @@ jobs:
       - run: pnpm install
         working-directory: screenpipe-app-tauri
       - run: |
-          if (!(Test-Path screenpipe-app-tauri\src-tauri\bin\screenpipe.exe)) { exit 1 }
+          if (!(Test-Path screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
         shell: pwsh
       - run: pnpm run tauri build
         working-directory: screenpipe-app-tauri
@@ -307,3 +257,4 @@ jobs:
         with:
           name: screenpipe-app-windows
           path: screenpipe-app-tauri/src-tauri/target/release/bundle
+

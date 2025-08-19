@@ -1,5 +1,5 @@
 use eyre::{bail, Result};
-use ndarray::{Array1, Array2, Array3, ArrayBase, Ix1, Ix3, OwnedRepr};
+use ndarray::{Array1, Array2, Array3, ArrayBase, ArrayViewD, Ix1, Ix3, OwnedRepr};
 use ort::session::Session;
 use ort::value::Value;
 use std::path::Path;
@@ -34,7 +34,7 @@ impl Vad {
 
     pub fn compute(&mut self, samples: &[f32]) -> Result<VadResult> {
         let samples_tensor = Array2::from_shape_vec((1, samples.len()), samples.to_vec())?;
-        let input_val = Value::from_array(samples_tensor)?;
+        let input_val = Value::from_array(samples_tensor.to_owned())?;
         let sr_val = Value::from_array(self.sample_rate_tensor.clone())?;
         let h_val = Value::from_array(self.h_tensor.clone())?;
         let c_val = Value::from_array(self.c_tensor.clone())?;
@@ -44,12 +44,14 @@ impl Vad {
             "h" => h_val,
             "c" => c_val
         ])?;
-        let (_, hn_data) = result["hn"].try_extract_tensor::<f32>()?;
-        self.h_tensor = ndarray::Array::from_shape_vec((2, 1, 64), hn_data.to_vec())?;
-        let (_, cn_data) = result["cn"].try_extract_tensor::<f32>()?;
-        self.c_tensor = ndarray::Array::from_shape_vec((2, 1, 64), cn_data.to_vec())?;
-        let (_, out_data) = result["output"].try_extract_tensor::<f32>()?;
-        let prob = *out_data.first().unwrap_or(&0.0);
+        let hn_out: ArrayViewD<'_, f32> = result["hn"].try_extract_array()?;
+        self.h_tensor =
+            ndarray::Array::from_shape_vec((2, 1, 64), hn_out.to_owned().into_raw_vec())?;
+        let cn_out: ArrayViewD<'_, f32> = result["cn"].try_extract_array()?;
+        self.c_tensor =
+            ndarray::Array::from_shape_vec((2, 1, 64), cn_out.to_owned().into_raw_vec())?;
+        let out: ArrayViewD<'_, f32> = result["output"].try_extract_array()?;
+        let prob = *out.first().unwrap_or(&0.0);
         Ok(VadResult { prob })
     }
 

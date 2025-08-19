@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
-use ndarray::{ArrayBase, Axis, IxDyn, ViewRepr, ArrayViewD};
-use std::{cmp::Ordering, path::Path, sync::Arc, sync::Mutex};
-use tracing::error;
+use ndarray::{ArrayBase, ArrayViewD, Axis, IxDyn, ViewRepr};
 use ort::session::Session;
 use ort::value::Value;
+use std::{cmp::Ordering, path::Path, sync::Arc, sync::Mutex};
+use tracing::error;
 
 use super::{embedding::EmbeddingExtractor, embedding_manager::EmbeddingManager};
 
@@ -169,9 +169,12 @@ impl SegmentIterator {
             .insert_axis(Axis(1))
             .to_owned();
 
-        let array_val = Value::from_array(array)?;
+        let array_val = Value::from_array(array.to_owned())?;
         let inputs = ort::inputs![array_val];
-        let ort_outs = self.session.run(inputs).context("Failed to run the session")?;
+        let ort_outs = self
+            .session
+            .run(inputs)
+            .context("Failed to run the session")?;
         let ort_out: ArrayViewD<'_, f32> = ort_outs
             .get("output")
             .context("Output tensor not found")?

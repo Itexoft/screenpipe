@@ -53,6 +53,7 @@ windows-targets = "0.52.0"
 windows-sys = "0.52.0"
 ort = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic", "ndarray"] }
 ort-sys = { version = "=2.0.0-rc.10", default-features = false, features = ["load-dynamic"] }
+ndarray = "0.16"
 
 http-cache-reqwest = "0.15.0"
 reqwest = { version = "=0.12.12", features = ["blocking", "multipart", "json"] }
