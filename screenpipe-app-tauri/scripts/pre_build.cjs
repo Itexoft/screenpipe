@@ -9,10 +9,12 @@ const destDir = path.join(root, "src-tauri", "bin");
 const plat = os.platform();
 const envTriple = process.env.SCREENPIPE_TARGET_TRIPLE;
 
+const arch = os.arch();
 const defaultTriple =
   plat === "win32" ? "x86_64-pc-windows-msvc" :
   plat === "linux" ? "x86_64-unknown-linux-gnu" :
-  "aarch64-apple-darwin";
+  arch === "arm64" ? "aarch64-apple-darwin" :
+  "x86_64-apple-darwin";
 
 const triple = envTriple || defaultTriple;
 const exeName = plat === "win32" ? "screenpipe.exe" : "screenpipe";
