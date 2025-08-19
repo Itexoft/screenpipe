@@ -38,7 +38,7 @@ if (!src) {
 
 fs.mkdirSync(destDir, { recursive: true });
 
-const dest = path.join(destDir, plat === "win32" ? `screenpipe-${triple}.exe` : `screenpipe-${triple}`);
+const dest = path.join(destDir, exeName);
 if (!src) {
   console.error("screenpipe binary not found", { candidates, triple });
   process.exit(1);
