@@ -36,8 +36,14 @@ function copy(src, base) {
 
 const screenpipeSrc = path.join(repoRoot, "target", triple, "release", `screenpipe${ext}`);
 copy(screenpipeSrc, "screenpipe");
-const bunHome = process.env.BUN_INSTALL || path.join(os.homedir(), ".bun");
-const bunSrc = path.join(bunHome, "bin", `bun${ext}`);
+let bunSrc;
+try {
+  bunSrc = execSync(plat === "win32" ? "where bun" : "which bun").toString().trim();
+} catch {}
+if (!bunSrc) {
+  const bunHome = process.env.BUN_INSTALL || path.join(os.homedir(), ".bun");
+  bunSrc = path.join(bunHome, "bin", `bun${ext}`);
+}
 copy(bunSrc, "bun");
 if (plat !== "win32") {
   try {
@@ -54,19 +60,26 @@ if (plat === "win32") {
     "onnxruntime_providers_shared.dll",
   ];
   const srcDir = path.join(repoRoot, "target", triple, "release");
-  const dest = path.join(
-    root,
-    "src-tauri",
-    `onnxruntime-win-x64-gpu-1.22.0`,
-    "lib"
-  );
+  const baseDest = path.join(root, "src-tauri", "onnxruntime-win-x64-gpu-1.22.0");
+  const dest = path.join(baseDest, "lib");
+  fs.mkdirSync(srcDir, { recursive: true });
   fs.mkdirSync(dest, { recursive: true });
+  const missing = libs.filter(lib => !fs.existsSync(path.join(srcDir, lib)));
+  if (missing.length) {
+    const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
+    const zip = path.join(repoRoot, "onnxruntime.zip");
+    execSync(`curl -L ${url} -o ${zip}`);
+    execSync(`powershell -Command "Expand-Archive -Path '${zip}' -DestinationPath '${repoRoot}'"`);
+    fs.unlinkSync(zip);
+    fs.rmSync(baseDest, { recursive: true, force: true });
+    fs.renameSync(path.join(repoRoot, "onnxruntime-win-x64-gpu-1.22.0"), baseDest);
+  }
   for (const lib of libs) {
-    const s = path.join(srcDir, lib);
+    const s = path.join(dest, lib);
     if (!fs.existsSync(s)) {
       console.error(`${lib} not found`, { s });
       process.exit(1);
     }
-    fs.copyFileSync(s, path.join(dest, lib));
+    fs.copyFileSync(s, path.join(srcDir, lib));
   }
 }
