@@ -36,7 +36,9 @@ jobs:
           export PKG_CONFIG_ALLOW_CROSS=1
           export RUSTFLAGS="-Awarnings -C link-arg=-Wl,-rpath,@executable_path/../lib -C link-arg=-Wl,-rpath,@loader_path/../lib"
           export RUSTDOCFLAGS=-Awarnings
-          cargo build --release -p screenpipe-server --target aarch64-apple-darwin
+          cargo build --release -p screenpipe-server --target aarch64-apple-darwin --quiet
+      - run: node ./scripts/pre_build.cjs
+        working-directory: screenpipe-app-tauri
       - run: |
           mkdir -p screenpipe-app-tauri/src-tauri/binaries
           cp target/aarch64-apple-darwin/release/screenpipe screenpipe-app-tauri/src-tauri/binaries/screenpipe-aarch64-apple-darwin
@@ -63,7 +65,7 @@ jobs:
         working-directory: screenpipe-app-tauri
       - run: pnpm run build
         working-directory: screenpipe-app-tauri
-      - run: pnpm run tauri build
+      - run: pnpm run tauri build -- --quiet
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4
         with:
@@ -231,7 +233,7 @@ jobs:
           echo CMAKE_MSVC_RUNTIME_LIBRARY=$env:CMAKE_MSVC_RUNTIME_LIBRARY
           echo RUSTFLAGS=$env:RUSTFLAGS
         shell: pwsh
-      - run: cargo build --release --target x86_64-pc-windows-msvc -vv
+      - run: cargo build --release --target x86_64-pc-windows-msvc --quiet
         shell: pwsh
         env:
           RUSTFLAGS: -Ctarget-feature=-crt-static -Awarnings
@@ -278,7 +280,7 @@ jobs:
       - run: |
           if (!(Test-Path screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
         shell: pwsh
-      - run: pnpm run tauri build
+      - run: pnpm run tauri build -- --quiet
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4
         with:
