@@ -8,8 +8,8 @@
             }
         },
         "externalBin": [
-            "screenpipe",
-            "bun"
+            "binaries/screenpipe",
+            "binaries/bun"
         ],
         "targets": [
             "nsis"
