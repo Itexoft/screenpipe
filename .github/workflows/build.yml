@@ -8,7 +8,7 @@ jobs:
     runs-on: macos-latest
     env:
       SCREENPIPE_TARGET_TRIPLE: aarch64-apple-darwin
-      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-osx-universal2-1.19.2/lib/libonnxruntime.dylib
+      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-osx-universal2-1.22.0/lib/libonnxruntime.dylib
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,7 +71,7 @@ jobs:
       SCREENPIPE_TARGET_TRIPLE: x86_64-unknown-linux-gnu
       CFLAGS: ""
       CXXFLAGS: ""
-      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-linux-x64-gpu-1.19.2/lib/libonnxruntime.so
+      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-linux-x64-gpu-1.22.0/lib/libonnxruntime.so
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -203,7 +203,7 @@ jobs:
       CFLAGS_x86_64_pc_windows_msvc: "/MD"
       CXXFLAGS_x86_64_pc_windows_msvc: "/MD"
       KNF_STATIC_CRT: "0"
-      ORT_DYLIB_PATH: ${{ github.workspace }}\screenpipe-app-tauri\src-tauri\onnxruntime-win-x64-gpu-1.19.2\lib\onnxruntime.dll
+      ORT_DYLIB_PATH: ${{ github.workspace }}\screenpipe-app-tauri\src-tauri\onnxruntime-win-x64-gpu-1.22.0\lib\onnxruntime.dll
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
