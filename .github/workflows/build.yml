@@ -112,6 +112,7 @@ jobs:
             libxi-dev \
             libgl1-mesa-dev \
             libasound2-dev \
+            libudev-dev \
             libpulse-dev \
             curl \
             pkg-config \
@@ -144,6 +145,7 @@ jobs:
           export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
           pkg-config --version
           pkg-config --modversion dbus-1 || true
+          pkg-config --modversion alsa || true
           echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
           ls -la /usr/lib/x86_64-linux-gnu/pkgconfig | head -n 120
       - run: pkg-config --modversion webkit2gtk-4.1
@@ -157,6 +159,9 @@ jobs:
           cargo check --all-targets --workspace
           cargo clippy --all-targets --workspace -q
       - run: cargo build --release --target x86_64-unknown-linux-gnu
+      - run: |
+          mkdir -p screenpipe-app-tauri/src-tauri/bin
+          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
       - run: |
@@ -175,7 +180,7 @@ jobs:
       - run: pnpm run build
         working-directory: screenpipe-app-tauri
       - run: |
-          [ -f screenpipe-app-tauri/src-tauri/bin/screenpipe-x86_64-unknown-linux-gnu ]
+          [ -f screenpipe-app-tauri/src-tauri/bin/screenpipe ]
         working-directory: .
       - run: pnpm run tauri build -- -vvv
         working-directory: screenpipe-app-tauri
@@ -254,6 +259,11 @@ jobs:
       - run: |
           if (!(Test-Path target\x86_64-pc-windows-msvc\release\screenpipe.exe)) { throw 'missing CLI' }
         shell: pwsh
+      - run: |
+          New-Item -Path "screenpipe-app-tauri\src-tauri\bin" -ItemType Directory -Force
+          Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\bin\screenpipe.exe"
+          Get-ChildItem "screenpipe-app-tauri\src-tauri\bin"
+        shell: pwsh
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
         shell: pwsh
@@ -289,7 +299,7 @@ jobs:
       - run: pnpm install
         working-directory: screenpipe-app-tauri
       - run: |
-          if (!(Test-Path screenpipe-app-tauri\src-tauri\bin\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
+          if (!(Test-Path screenpipe-app-tauri\src-tauri\bin\screenpipe.exe)) { exit 1 }
         shell: pwsh
       - run: pnpm run tauri build
         working-directory: screenpipe-app-tauri
