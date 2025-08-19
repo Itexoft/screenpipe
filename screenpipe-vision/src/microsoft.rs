@@ -29,7 +29,7 @@ pub async fn perform_ocr_windows(image: &DynamicImage) -> Result<(String, String
     writer.FlushAsync()?.await?;
     stream.Seek(0)?;
 
-    let decoder = BitmapDecoder::CreateAsync(BitmapDecoder::PngDecoderId()?, &stream)?.await?;
+    let decoder = BitmapDecoder::CreateWithIdAsync(&BitmapDecoder::PngDecoderId()?, &stream)?.await?;
 
     let bitmap: SoftwareBitmap = decoder.GetSoftwareBitmapAsync()?.await?;
 
