@@ -13,8 +13,8 @@
             "binaries/screenpipe",
             "binaries/bun",
             "ui_monitor",
-            "ffmpeg",
-            "ffprobe"
+            "binaries/ffmpeg",
+            "binaries/ffprobe"
         ]
     }
 }
