@@ -19,8 +19,7 @@ impl EmbeddingExtractor {
             .map_err(anyhow::Error::msg)
             .context("compute_fbank failed")?;
         let features = features.insert_axis(ndarray::Axis(0));
-        let alloc = self.session.allocator();
-        let feats_val = Value::from_array(alloc, &features)?;
+        let feats_val = Value::from_array(features)?;
         let inputs = ort::inputs!["feats" => feats_val];
         let ort_outs = self.session.run(inputs)?;
         let (_, data) = ort_outs
