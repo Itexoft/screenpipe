@@ -8,6 +8,7 @@ jobs:
     runs-on: macos-latest
     env:
       SCREENPIPE_TARGET_TRIPLE: aarch64-apple-darwin
+      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-osx-universal2-1.19.2/lib/libonnxruntime.dylib
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,6 +21,10 @@ jobs:
           override: true
           cache: true
           rustflags: ""
+      - run: |
+          rustc -vV && cargo -vV
+          echo ORT_DYLIB_PATH=$ORT_DYLIB_PATH
+          cargo tree -e features -i ort
       - run: brew unlink pkg-config@0.29.2 || true
       - run: brew install ffmpeg pkg-config
       - run: brew link --overwrite pkg-config
@@ -63,6 +68,7 @@ jobs:
       SCREENPIPE_TARGET_TRIPLE: x86_64-unknown-linux-gnu
       CFLAGS: ""
       CXXFLAGS: ""
+      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-linux-x64-gpu-1.19.2/lib/libonnxruntime.so
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,6 +77,10 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-gnu
+      - run: |
+          rustc -vV && cargo -vV
+          echo ORT_DYLIB_PATH=$ORT_DYLIB_PATH
+          cargo tree -e features -i ort
       - run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -169,6 +179,7 @@ jobs:
       CFLAGS_x86_64_pc_windows_msvc: "/MD"
       CXXFLAGS_x86_64_pc_windows_msvc: "/MD"
       KNF_STATIC_CRT: "0"
+      ORT_DYLIB_PATH: ${{ github.workspace }}\screenpipe-app-tauri\src-tauri\onnxruntime-win-x64-gpu-1.19.2\lib\onnxruntime.dll
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -183,6 +194,12 @@ jobs:
           version: 8
           run_install: false
       - uses: oven-sh/setup-bun@v1
+      - run: |
+          rustc -vV && cargo -vV
+          cl.exe /Bv
+          echo ORT_DYLIB_PATH=$env:ORT_DYLIB_PATH
+          cargo tree -e features -i ort
+        shell: pwsh
       - run: |
           $url = "https://7-zip.org/a/7z2301-x64.exe"
           $installer = "7z-installer.exe"
@@ -233,6 +250,9 @@ jobs:
           path: screenpipe-*.zip
       - run: pnpm install
         working-directory: screenpipe-app-tauri
+      - run: |
+          if (!(Test-Path screenpipe-app-tauri\src-tauri\bin\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
+        shell: pwsh
       - run: pnpm run tauri build
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4
