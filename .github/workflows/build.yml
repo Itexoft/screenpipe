@@ -8,6 +8,7 @@ jobs:
     runs-on: macos-latest
     env:
       SCREENPIPE_TARGET_TRIPLE: aarch64-apple-darwin
+      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-osx-universal2-1.22.0/lib/libonnxruntime.dylib
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,6 +21,13 @@ jobs:
           override: true
           cache: true
           rustflags: ""
+      - run: |
+          rustc -vV && cargo -vV
+          echo ORT_DYLIB_PATH=$ORT_DYLIB_PATH
+          ls -la "$ORT_DYLIB_PATH" || true
+          cargo tree -e features -i ort
+      - run: printenv | sort
+      - run: cargo metadata --no-deps --format-version=1 | jq -r '.packages[].name'
       - run: brew unlink pkg-config@0.29.2 || true
       - run: brew install ffmpeg pkg-config
       - run: brew link --overwrite pkg-config
@@ -63,6 +71,7 @@ jobs:
       SCREENPIPE_TARGET_TRIPLE: x86_64-unknown-linux-gnu
       CFLAGS: ""
       CXXFLAGS: ""
+      ORT_DYLIB_PATH: ${{ github.workspace }}/screenpipe-app-tauri/src-tauri/onnxruntime-linux-x64-gpu-1.22.0/lib/libonnxruntime.so
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,6 +80,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-gnu
+      - run: |
+          rustc -vV && cargo -vV
+          echo ORT_DYLIB_PATH=$ORT_DYLIB_PATH
+          ls -la "$ORT_DYLIB_PATH" || true
+          cargo tree -e features -i ort
+      - run: printenv | sort
+      - run: cargo metadata --no-deps --format-version=1 | jq -r '.packages[].name'
       - run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -96,6 +112,7 @@ jobs:
             libxi-dev \
             libgl1-mesa-dev \
             libasound2-dev \
+            libudev-dev \
             libpulse-dev \
             curl \
             pkg-config \
@@ -124,13 +141,27 @@ jobs:
             libgdk-pixbuf2.0-bin \
             libgtk-3-bin \
             desktop-file-utils
+      - run: |
+          export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
+          pkg-config --version
+          pkg-config --modversion dbus-1 || true
+          pkg-config --modversion alsa || true
+          echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
+          ls -la /usr/lib/x86_64-linux-gnu/pkgconfig | head -n 120
       - run: pkg-config --modversion webkit2gtk-4.1
       - uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: false
       - uses: oven-sh/setup-bun@v1
+      - run: |
+          export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
+          cargo check --all-targets --workspace
+          cargo clippy --all-targets --workspace -q
       - run: cargo build --release --target x86_64-unknown-linux-gnu
+      - run: |
+          mkdir -p screenpipe-app-tauri/src-tauri/bin
+          cp target/x86_64-unknown-linux-gnu/release/screenpipe screenpipe-app-tauri/src-tauri/bin/screenpipe
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
       - run: |
@@ -148,6 +179,9 @@ jobs:
         working-directory: screenpipe-app-tauri
       - run: pnpm run build
         working-directory: screenpipe-app-tauri
+      - run: |
+          [ -f screenpipe-app-tauri/src-tauri/bin/screenpipe ]
+        working-directory: .
       - run: pnpm run tauri build -- -vvv
         working-directory: screenpipe-app-tauri
         env:
@@ -169,6 +203,7 @@ jobs:
       CFLAGS_x86_64_pc_windows_msvc: "/MD"
       CXXFLAGS_x86_64_pc_windows_msvc: "/MD"
       KNF_STATIC_CRT: "0"
+      ORT_DYLIB_PATH: ${{ github.workspace }}\screenpipe-app-tauri\src-tauri\onnxruntime-win-x64-gpu-1.22.0\lib\onnxruntime.dll
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -178,11 +213,33 @@ jobs:
         with:
           toolchain: stable
           target: x86_64-pc-windows-msvc
+          override: true
+          components: rustfmt, clippy
       - uses: pnpm/action-setup@v3
         with:
           version: 8
           run_install: false
       - uses: oven-sh/setup-bun@v1
+      - run: |
+          rustup component add clippy rustfmt
+          rustup target add x86_64-pc-windows-msvc
+          rustup override set stable
+        shell: pwsh
+      - run: |
+          rustc -vV
+          cargo -vV
+          rustup show
+          rustup target list --installed
+          $sysroot = (rustc --print sysroot)
+          Get-ChildItem "$sysroot\lib\rustlib\x86_64-pc-windows-msvc\lib" | Where-Object { $_.Name -like 'core*' }
+          cl.exe /Bv
+          echo ORT_DYLIB_PATH=$env:ORT_DYLIB_PATH
+          Test-Path $env:ORT_DYLIB_PATH
+          cargo tree -e features -i ort
+          cargo metadata --no-deps --format-version=1 | jq -r '.packages[].name'
+        shell: pwsh
+      - run: gci env:* | sort-object Name
+        shell: pwsh
       - run: |
           $url = "https://7-zip.org/a/7z2301-x64.exe"
           $installer = "7z-installer.exe"
@@ -198,6 +255,14 @@ jobs:
           echo RUSTFLAGS=$env:RUSTFLAGS
         shell: pwsh
       - run: cargo build --release --target x86_64-pc-windows-msvc -vv
+        shell: pwsh
+      - run: |
+          if (!(Test-Path target\x86_64-pc-windows-msvc\release\screenpipe.exe)) { throw 'missing CLI' }
+        shell: pwsh
+      - run: |
+          New-Item -Path "screenpipe-app-tauri\src-tauri\bin" -ItemType Directory -Force
+          Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\bin\screenpipe.exe"
+          Get-ChildItem "screenpipe-app-tauri\src-tauri\bin"
         shell: pwsh
       - run: node ./scripts/pre_build.cjs
         working-directory: screenpipe-app-tauri
@@ -233,6 +298,9 @@ jobs:
           path: screenpipe-*.zip
       - run: pnpm install
         working-directory: screenpipe-app-tauri
+      - run: |
+          if (!(Test-Path screenpipe-app-tauri\src-tauri\bin\screenpipe.exe)) { exit 1 }
+        shell: pwsh
       - run: pnpm run tauri build
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4

@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
-use ndarray::{ArrayBase, Axis, IxDyn, ViewRepr};
+use ndarray::{ArrayBase, Axis, IxDyn, ViewRepr, ArrayViewD};
 use std::{cmp::Ordering, path::Path, sync::Arc, sync::Mutex};
 use tracing::error;
+use ort::session::Session;
+use ort::value::Value;
 
 use super::{embedding::EmbeddingExtractor, embedding_manager::EmbeddingManager};
 
@@ -112,7 +114,7 @@ fn handle_new_segment(
 pub struct SegmentIterator {
     samples: Vec<f32>,
     sample_rate: u32,
-    session: ort::Session,
+    session: Session,
     embedding_extractor: Arc<Mutex<EmbeddingExtractor>>,
     embedding_manager: EmbeddingManager,
     current_position: usize,
@@ -167,19 +169,17 @@ impl SegmentIterator {
             .insert_axis(Axis(1))
             .to_owned();
 
-        let inputs = ort::inputs![array].context("Failed to prepare inputs")?;
-        let ort_outs = self
-            .session
-            .run(inputs)
-            .context("Failed to run the session")?;
-        let ort_out = ort_outs.get("output").context("Output tensor not found")?;
-
-        let ort_out = ort_out
+        let alloc = self.session.allocator();
+        let array_val = Value::from_array(alloc, &array)?;
+        let inputs = ort::inputs![array_val];
+        let ort_outs = self.session.run(inputs).context("Failed to run the session")?;
+        let (shape, data) = ort_outs
+            .get("output")
+            .context("Output tensor not found")?
             .try_extract_tensor::<f32>()
             .context("Failed to extract tensor")?;
-
+        let ort_out = ArrayViewD::from_shape(IxDyn(shape.dims()), data).context("Failed to create view")?;
         let mut result = None;
-
         for row in ort_out.outer_iter() {
             for sub_row in row.axis_iter(Axis(0)) {
                 let max_index = find_max_index(sub_row)?;
