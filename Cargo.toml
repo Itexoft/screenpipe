@@ -46,6 +46,10 @@ vcpkg = "0.2"
 cc = "1.0"
 oasgen = { version = "0.22.0", features = ["axum", "chrono"] }
 once_cell = "1.20.2"
+windows = "0.58.0"
+windows-core = "0.58.0"
+windows-targets = "0.58.0"
+windows-sys = "0.58.0"
 
 http-cache-reqwest = "0.15.0"
 reqwest = { version = "=0.12.12", features = ["blocking", "multipart", "json"] }
@@ -58,8 +62,6 @@ hf-hub = { git = "https://github.com/neo773/hf-hub", features = ["native-tls"] }
 # Patch half to use a version compatible with both candle and ort
 half = { git = "https://github.com/starkat99/half-rs.git", tag = "v2.5.0" }
 knf-rs-sys = { path = "vendor/knf-rs-sys" }
-windows = { git = "https://github.com/microsoft/windows-rs", tag = "0.53.0" }
-windows-core = { git = "https://github.com/microsoft/windows-rs", tag = "0.60.0", package = "windows-core" }
 
 [patch."https://github.com/Neptune650/knf-rs.git"]
 knf-rs-sys = { path = "vendor/knf-rs-sys" }
