@@ -169,16 +169,14 @@ impl SegmentIterator {
             .insert_axis(Axis(1))
             .to_owned();
 
-        let alloc = self.session.allocator();
-        let array_val = Value::from_array(alloc, &array)?;
+        let array_val = Value::from_array(array)?;
         let inputs = ort::inputs![array_val];
         let ort_outs = self.session.run(inputs).context("Failed to run the session")?;
-        let (shape, data) = ort_outs
+        let ort_out: ArrayViewD<'_, f32> = ort_outs
             .get("output")
             .context("Output tensor not found")?
-            .try_extract_tensor::<f32>()
-            .context("Failed to extract tensor")?;
-        let ort_out = ArrayViewD::from_shape(IxDyn(shape.dims()), data).context("Failed to create view")?;
+            .try_extract_array()
+            .context("Failed to extract array")?;
         let mut result = None;
         for row in ort_out.outer_iter() {
             for sub_row in row.axis_iter(Axis(0)) {
