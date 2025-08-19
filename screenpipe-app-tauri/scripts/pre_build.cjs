@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { spawnSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(root, "..");
@@ -26,12 +27,19 @@ const candidates = [
 let src = candidates.find(p => fs.existsSync(p));
 
 if (!src) {
-  const targetDir = path.join(repoRoot, "target");
-  if (fs.existsSync(targetDir)) {
-    const triples = fs.readdirSync(targetDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
-    for (const t of triples) {
-      const p = path.join(targetDir, t, "release", exeName);
-      if (fs.existsSync(p)) { src = p; break; }
+  const args = ["build", "--release", "--bin", "screenpipe"];
+  if (triple) args.push("--target", triple);
+  const r = spawnSync("cargo", args, { cwd: repoRoot, stdio: "inherit" });
+  if (r.status !== 0) process.exit(r.status);
+  src = candidates.find(p => fs.existsSync(p));
+  if (!src) {
+    const targetDir = path.join(repoRoot, "target");
+    if (fs.existsSync(targetDir)) {
+      const triples = fs.readdirSync(targetDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
+      for (const t of triples) {
+        const p = path.join(targetDir, t, "release", exeName);
+        if (fs.existsSync(p)) { src = p; break; }
+      }
     }
   }
 }
