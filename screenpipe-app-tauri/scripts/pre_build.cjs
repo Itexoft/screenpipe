@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { execSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(root, "..");
@@ -35,7 +36,6 @@ function copy(src, base) {
 
 const screenpipeSrc = path.join(repoRoot, "target", triple, "release", `screenpipe${ext}`);
 copy(screenpipeSrc, "screenpipe");
-
 const bunHome = process.env.BUN_INSTALL || path.join(os.homedir(), ".bun");
 const bunSrc = path.join(bunHome, "bin", `bun${ext}`);
 copy(bunSrc, "bun");
