@@ -17,37 +17,21 @@ const defaultTriple =
   "x86_64-apple-darwin";
 
 const triple = envTriple || defaultTriple;
-const exeName = plat === "win32" ? "screenpipe.exe" : "screenpipe";
-const candidates = [
-  path.join(repoRoot, "target", triple, "release", exeName),
-  path.join(repoRoot, "target", "release", exeName)
-];
+const base = "screenpipe";
+const ext = plat === "win32" ? ".exe" : "";
+const src = path.join(repoRoot, "target", triple, "release", base + ext);
+const dest = path.join(destDir, `${base}-${triple}${ext}`);
 
-let src = candidates.find(p => fs.existsSync(p));
-
-if (!src) {
-  const targetDir = path.join(repoRoot, "target");
-  if (fs.existsSync(targetDir)) {
-    const triples = fs.readdirSync(targetDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
-    for (const t of triples) {
-      const p = path.join(targetDir, t, "release", exeName);
-      if (fs.existsSync(p)) { src = p; break; }
-    }
-  }
-}
-
-fs.mkdirSync(destDir, { recursive: true });
-
-const dest = path.join(destDir, exeName);
-if (!src) {
-  console.error("screenpipe binary not found", { candidates, triple });
+if (!fs.existsSync(src)) {
+  console.error("screenpipe binary not found", { src, triple });
   process.exit(1);
 }
 
+fs.mkdirSync(destDir, { recursive: true });
 fs.copyFileSync(src, dest);
 
 if (plat !== "win32") {
   try { fs.chmodSync(dest, 0o755); } catch {}
 }
 
-console.log("screenpipe binary copied", { src, dest, triple, platform: plat });
+console.log("screenpipe binary copied", { src, dest, triple });

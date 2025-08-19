@@ -8,7 +8,7 @@
             }
         },
         "externalBin": [
-            "screenpipe",
+            "binaries/screenpipe",
             "bun"
         ],
         "targets": [
