@@ -145,7 +145,7 @@ jobs:
           export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
           pkg-config --version
           pkg-config --modversion dbus-1 || true
-          pkg-config --modversion alsa || true
+          pkg-config --modversion alsa
           echo PKG_CONFIG_PATH=$PKG_CONFIG_PATH
           ls -la /usr/lib/x86_64-linux-gnu/pkgconfig | head -n 120
       - run: pkg-config --modversion webkit2gtk-4.1
