@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use ndarray::Array2;
+use ndarray::{Array2, ArrayViewD};
 use ort::session::Session;
 use ort::value::Value;
 use std::path::Path;
@@ -19,15 +19,15 @@ impl EmbeddingExtractor {
             .map_err(anyhow::Error::msg)
             .context("compute_fbank failed")?;
         let features = features.insert_axis(ndarray::Axis(0));
-        let feats_val = Value::from_array(features)?;
+        let feats_val = Value::from_array(features.to_owned())?;
         let inputs = ort::inputs!["feats" => feats_val];
         let ort_outs = self.session.run(inputs)?;
-        let (_, data) = ort_outs
+        let ort_out: ArrayViewD<'_, f32> = ort_outs
             .get("embs")
             .context("Output tensor not found")?
-            .try_extract_tensor::<f32>()
-            .context("Failed to extract tensor")?;
-        let embeddings: Vec<f32> = data.to_vec();
+            .try_extract_array()
+            .context("Failed to extract array")?;
+        let embeddings: Vec<f32> = ort_out.to_owned().into_raw_vec();
         Ok(embeddings.into_iter())
     }
 }
