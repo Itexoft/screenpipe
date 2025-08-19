@@ -70,6 +70,8 @@ if [ "$os" = "unknown-linux-gnu" ]; then
     # Check for required libraries
     NEED_ALSA=0
     NEED_FFMPEG=0
+    NEED_GLIB=0
+    NEED_GOBJECT=0
 
     if ! ldconfig -p | grep -q "libasound.so.2" >/dev/null 2>&1; then
         NEED_ALSA=1
@@ -77,32 +79,42 @@ if [ "$os" = "unknown-linux-gnu" ]; then
     if ! command -v ffmpeg >/dev/null 2>&1; then
         NEED_FFMPEG=1
     fi
+    if ! pkg-config --exists glib-2.0 >/dev/null 2>&1; then
+        NEED_GLIB=1
+    fi
+    if ! pkg-config --exists gobject-2.0 >/dev/null 2>&1; then
+        NEED_GOBJECT=1
+    fi
 
     # Install missing dependencies based on package manager
-    if [ $NEED_ALSA -eq 1 ] || [ $NEED_FFMPEG -eq 1 ]; then
+    if [ $NEED_ALSA -eq 1 ] || [ $NEED_FFMPEG -eq 1 ] || [ $NEED_GLIB -eq 1 ] || [ $NEED_GOBJECT -eq 1 ]; then
         if command -v apt-get >/dev/null 2>&1; then
             # Ubuntu/Debian
             PKGS=""
             [ $NEED_ALSA -eq 1 ] && PKGS="$PKGS libasound2-dev" && echo "installing libasound2-dev..."
             [ $NEED_FFMPEG -eq 1 ] && PKGS="$PKGS ffmpeg" && echo "installing ffmpeg..."
+            if [ $NEED_GLIB -eq 1 ] || [ $NEED_GOBJECT -eq 1 ]; then PKGS="$PKGS libglib2.0-dev" && echo "installing libglib2.0-dev..."; fi
             sudo apt-get install -qq -y $PKGS >/dev/null 2>&1
         elif command -v dnf >/dev/null 2>&1; then
             # Fedora/RHEL
             PKGS=""
             [ $NEED_ALSA -eq 1 ] && PKGS="$PKGS alsa-lib" && echo "installing alsa-lib..."
             [ $NEED_FFMPEG -eq 1 ] && PKGS="$PKGS ffmpeg" && echo "installing ffmpeg..."
+            if [ $NEED_GLIB -eq 1 ] || [ $NEED_GOBJECT -eq 1 ]; then PKGS="$PKGS glib2-devel" && echo "installing glib2-devel..."; fi
             sudo dnf install -q -y $PKGS >/dev/null 2>&1
         elif command -v pacman >/dev/null 2>&1; then
             # Arch Linux
             PKGS=""
             [ $NEED_ALSA -eq 1 ] && PKGS="$PKGS alsa-lib" && echo "installing alsa-lib..."
             [ $NEED_FFMPEG -eq 1 ] && PKGS="$PKGS ffmpeg" && echo "installing ffmpeg..."
+            if [ $NEED_GLIB -eq 1 ] || [ $NEED_GOBJECT -eq 1 ]; then PKGS="$PKGS glib2" && echo "installing glib2..."; fi
             sudo pacman -S --noconfirm --quiet $PKGS >/dev/null 2>&1
         elif command -v zypper >/dev/null 2>&1; then
             # OpenSUSE
             PKGS=""
             [ $NEED_ALSA -eq 1 ] && PKGS="$PKGS alsa-lib" && echo "installing alsa-lib..."
             [ $NEED_FFMPEG -eq 1 ] && PKGS="$PKGS ffmpeg" && echo "installing ffmpeg..."
+            if [ $NEED_GLIB -eq 1 ] || [ $NEED_GOBJECT -eq 1 ]; then PKGS="$PKGS glib2-devel" && echo "installing glib2-devel..."; fi
             sudo zypper --quiet --non-interactive install $PKGS >/dev/null 2>&1
         fi
     fi
