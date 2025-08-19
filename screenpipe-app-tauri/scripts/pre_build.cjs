@@ -4,7 +4,7 @@ const os = require("os");
 
 const root = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(root, "..");
-const destDir = path.join(root, "src-tauri", "bin");
+const destDir = path.join(root, "src-tauri", "binaries");
 
 const plat = os.platform();
 const envTriple = process.env.SCREENPIPE_TARGET_TRIPLE;
@@ -36,14 +36,14 @@ if (!src) {
   }
 }
 
+fs.mkdirSync(destDir, { recursive: true });
+
+const dest = path.join(destDir, plat === "win32" ? `screenpipe-${triple}.exe` : `screenpipe-${triple}`);
 if (!src) {
   console.error("screenpipe binary not found", { candidates, triple });
   process.exit(1);
 }
 
-fs.mkdirSync(destDir, { recursive: true });
-
-const dest = path.join(destDir, plat === "win32" ? `screenpipe-${triple}.exe` : `screenpipe-${triple}`);
 fs.copyFileSync(src, dest);
 
 if (plat !== "win32") {

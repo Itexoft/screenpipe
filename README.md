@@ -133,6 +133,8 @@ screenpipe
 make sure to allow permissions on macos (screen, mic)
 
 - [get the desktop app](https://screenpi.pe/)
+- [glib-2.0](https://developer.gnome.org/glib/)
+- [gobject-2.0](https://developer.gnome.org/gobject/)
 - [docs & build from source](https://docs.screenpi.pe/getting-started)
 
 ## create plugins
