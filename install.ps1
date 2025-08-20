@@ -68,20 +68,11 @@ try {
     }
     
     Write-Host "Installing Visual Studio Redistributables..."
-    $vswherePaths = @(
-        "$env:ProgramFiles\Microsoft Visual Studio\Installer\vswhere.exe",
-        "$env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-    )
-    $vswhere = $vswherePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
-    if (-not $vswhere) { throw "vswhere.exe not found" }
-    $vsInstall = & $vswhere -latest -products * -property installationPath
-    if (-not $vsInstall) { throw "Visual Studio installation not found" }
-    $redistRoot = Join-Path $vsInstall "VC\Redist\MSVC"
-    $latestRedist = Get-ChildItem $redistRoot -Directory | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
-    if (-not $latestRedist) { throw "No VC Redist versions found" }
-    $crtDir = Get-ChildItem (Join-Path $latestRedist.FullName "x64") -Directory -Filter "Microsoft.VC*.CRT" | Select-Object -First 1
-    if (-not $crtDir) { throw "CRT directory not found in $($latestRedist.FullName)" }
-    Copy-Item $crtDir.FullName (Join-Path $installDir "bin") -Recurse -Force
+    $vcUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+    $vcPath = "$env:TEMP\vc_redist.x64.exe"
+    Invoke-WebRequest -Uri $vcUrl -OutFile $vcPath
+    Start-Process -FilePath $vcPath -ArgumentList "/install /quiet /norestart" -Wait
+    Remove-Item $vcPath -Force
 
     Write-Host "Installation Complete"
     Write-Host ""
