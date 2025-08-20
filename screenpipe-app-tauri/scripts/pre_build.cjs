@@ -36,7 +36,7 @@ function copy(src, base, plain, dir) {
 }
 
 const screenpipeSrc = path.join(repoRoot, "target", triple, "release", `screenpipe${ext}`);
-copy(screenpipeSrc, "screenpipe", true);
+copy(screenpipeSrc, "screenpipe");
 let bunSrc;
 try {
   bunSrc = execSync(plat === "win32" ? "where bun" : "which bun").toString().trim();
@@ -45,13 +45,13 @@ if (!bunSrc) {
   const bunHome = process.env.BUN_INSTALL || path.join(os.homedir(), ".bun");
   bunSrc = path.join(bunHome, "bin", `bun${ext}`);
 }
-copy(bunSrc, "bun", true);
+copy(bunSrc, "bun");
 if (plat !== "win32") {
   try {
     const ffmpegSrc = execSync("which ffmpeg").toString().trim();
-    copy(ffmpegSrc, "ffmpeg", true);
+    copy(ffmpegSrc, "ffmpeg");
     const ffprobeSrc = execSync("which ffprobe").toString().trim();
-    copy(ffprobeSrc, "ffprobe", true);
+    copy(ffprobeSrc, "ffprobe");
     const tesseractSrc = execSync("which tesseract").toString().trim();
     copy(tesseractSrc, "tesseract", true, path.join(root, "src-tauri"));
   } catch {}
@@ -76,7 +76,10 @@ if (plat === "win32") {
       }
     }
   }
-  let dll = find(pkgDir, "onnxruntime.dll");
+  let dll;
+  if (fs.existsSync(pkgDir)) {
+    dll = find(pkgDir, "onnxruntime.dll");
+  }
   if (!dll) {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
