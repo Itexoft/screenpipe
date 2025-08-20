@@ -28,7 +28,8 @@ jobs:
           cargo tree -e features -i ort
       - run: printenv | sort
       - run: cargo metadata --no-deps --format-version=1 | jq -r '.packages[].name'
-      - run: brew unlink pkg-config@0.29.2 || true
+      - run: |
+          if brew list pkg-config@0.29.2 &>/dev/null; then brew unlink pkg-config@0.29.2; fi
       - run: brew install ffmpeg pkg-config
       - run: brew link --overwrite pkg-config
       - run: |
