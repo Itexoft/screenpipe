@@ -107,8 +107,9 @@ if (plat === "win32") {
     fs.rmSync(tmp, { recursive: true, force: true });
     fs.unlinkSync(zip);
   }
-  if (!fs.existsSync(path.join(pkgDir, "lib", "onnxruntime.dll"))) {
-    console.error("onnxruntime.dll not found");
+  const coreLib = path.join(pkgDir, "lib", "onnxruntime.dll");
+  if (!fs.existsSync(coreLib)) {
+    console.error("onnxruntime.dll not found", { coreLib });
     process.exit(1);
   }
   for (const lib of libs) {
@@ -117,6 +118,8 @@ if (plat === "win32") {
       console.error(`${lib} not found`, { srcLib });
       process.exit(1);
     }
-    fs.copyFileSync(srcLib, path.join(srcDir, lib));
+    const destLib = path.join(srcDir, lib);
+    console.log("copying", { src: srcLib, dest: destLib });
+    fs.copyFileSync(srcLib, destLib);
   }
 }
