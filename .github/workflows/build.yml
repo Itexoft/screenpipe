@@ -211,7 +211,6 @@ jobs:
           Get-ChildItem "$sysroot\lib\rustlib\x86_64-pc-windows-msvc\lib" | Where-Object { $_.Name -like 'core*' }
           cl.exe /Bv
           echo ORT_DYLIB_PATH=$env:ORT_DYLIB_PATH
-          Test-Path $env:ORT_DYLIB_PATH
           cargo tree -e features -i ort
           cargo metadata --no-deps --format-version=1 | jq -r '.packages[].name'
         shell: pwsh
@@ -248,6 +247,10 @@ jobs:
         working-directory: screenpipe-app-tauri
         shell: pwsh
       - run: |
+          if (-not (Test-Path $env:ORT_DYLIB_PATH)) { throw 'missing onnxruntime.dll' }
+          Get-ChildItem 'screenpipe-app-tauri\src-tauri\onnxruntime-win-x64-gpu-1.22.0\lib'
+        shell: pwsh
+      - run: |
           $ffmpegSrc = Join-Path $env:ChocolateyInstall 'lib\ffmpeg\tools\ffmpeg'
           Copy-Item $ffmpegSrc 'screenpipe-app-tauri\src-tauri\ffmpeg' -Recurse -Force
           if (!(Test-Path 'screenpipe-app-tauri\src-tauri\ffmpeg\lib')) {
@@ -266,7 +269,7 @@ jobs:
           $packageDir = "screenpipe-$env:VERSION-x86_64-pc-windows-msvc"
           New-Item -Path "$packageDir/bin" -ItemType Directory -Force
           Copy-Item "target/x86_64-pc-windows-msvc/release/screenpipe.exe" "$packageDir/bin/"
-          Copy-Item "target/x86_64-pc-windows-msvc/release/onnxruntime.dll" "$packageDir/bin/" -ErrorAction SilentlyContinue
+          Copy-Item "target/x86_64-pc-windows-msvc/release/onnxruntime.dll" "$packageDir/bin/"
           7z a "$packageDir.zip" "./$packageDir/*"
         shell: pwsh
       - uses: actions/upload-artifact@v4

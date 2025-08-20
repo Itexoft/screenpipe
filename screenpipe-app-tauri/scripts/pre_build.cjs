@@ -97,8 +97,10 @@ if (plat === "win32") {
       process.exit(1);
     }
     fs.rmSync(pkgDir, { recursive: true, force: true });
-    fs.cpSync(path.join(inner, '.'), pkgDir, { recursive: true });
-    if (!fs.existsSync(path.join(pkgDir, "lib", "onnxruntime.dll"))) {
+    fs.cpSync(inner, pkgDir, { recursive: true });
+    const libDir = path.join(pkgDir, "lib");
+    console.log(fs.readdirSync(libDir));
+    if (!fs.existsSync(path.join(libDir, "onnxruntime.dll"))) {
       console.error("onnxruntime.dll not found");
       process.exit(1);
     }
