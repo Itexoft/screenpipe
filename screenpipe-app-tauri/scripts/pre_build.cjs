@@ -47,14 +47,25 @@ if (!bunSrc) {
 }
 copy(bunSrc, "bun");
 if (plat !== "win32") {
+  let ffmpegSrc;
   try {
-    const ffmpegSrc = execSync("which ffmpeg").toString().trim();
-    copy(ffmpegSrc, "ffmpeg");
-    const ffprobeSrc = execSync("which ffprobe").toString().trim();
-    copy(ffprobeSrc, "ffprobe");
-    const tesseractSrc = execSync("which tesseract").toString().trim();
-    copy(tesseractSrc, "tesseract", true, path.join(root, "src-tauri"));
-  } catch {}
+    ffmpegSrc = execSync("which ffmpeg").toString().trim();
+  } catch {
+    console.error("ffmpeg not found");
+    process.exit(1);
+  }
+  copy(ffmpegSrc, "ffmpeg");
+  let ffprobeSrc;
+  try {
+    ffprobeSrc = execSync("which ffprobe").toString().trim();
+  } catch {
+    console.error("ffprobe not found");
+    console.error("install ffprobe via ffmpeg package");
+    process.exit(1);
+  }
+  copy(ffprobeSrc, "ffprobe");
+  const tesseractSrc = execSync("which tesseract").toString().trim();
+  copy(tesseractSrc, "tesseract", true, path.join(root, "src-tauri"));
 }
 if (plat === "win32") {
   const libs = [
