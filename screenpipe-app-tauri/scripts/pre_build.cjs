@@ -90,7 +90,8 @@ if (plat === "win32") {
     }
     const inner = path.join(pkgDir, "onnxruntime-win-x64-gpu-1.22.0");
     if (fs.existsSync(inner)) {
-      for (const e of fs.readdirSync(inner)) fs.renameSync(path.join(inner, e), path.join(pkgDir, e));
+      for (const e of fs.readdirSync(inner)) fs.cpSync(path.join(inner, e), path.join(pkgDir, e), { recursive: true });
+
       fs.rmSync(inner, { recursive: true, force: true });
     }
     fs.unlinkSync(zip);
