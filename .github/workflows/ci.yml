@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-2022, macos-14]
+        os: [ubuntu-22.04, windows-2025, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +23,11 @@ jobs:
           components: clippy
 
       - uses: Swatinem/rust-cache@v2
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+        with:
+          arch: x64
 
       - name: Metadata
         if: runner.os != 'Windows'
@@ -57,10 +62,8 @@ jobs:
           rustc -vV
           cargo -V
 
-      - name: cl.exe info (best-effort)
+      - name: Verify cl.exe
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $cl = (Get-Command cl.exe -ErrorAction SilentlyContinue)
-          if ($cl) { & $cl.Source /Bv } else { Write-Host "cl.exe not on PATH, skipping" }
+        shell: cmd
+        run: cl /Bv
 

@@ -177,7 +177,7 @@ jobs:
             screenpipe-app-tauri/src-tauri/target
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
     env:
       SCREENPIPE_TARGET_TRIPLE: x86_64-pc-windows-msvc
       RUSTFLAGS: "-Ctarget-feature=-crt-static"
