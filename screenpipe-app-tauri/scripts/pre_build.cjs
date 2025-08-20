@@ -20,8 +20,8 @@ const defaultTriple =
 const triple = envTriple || defaultTriple;
 const ext = plat === "win32" ? ".exe" : "";
 
-function copy(src, base) {
-  const dest = path.join(destDir, `${base}-${triple}${ext}`);
+function copy(src, base, plain) {
+  const dest = path.join(destDir, plain ? `${base}${ext}` : `${base}-${triple}${ext}`);
   if (!fs.existsSync(src)) {
     console.error(`${base} binary not found`, { src, triple });
     process.exit(1);
@@ -48,11 +48,11 @@ copy(bunSrc, "bun");
 if (plat !== "win32") {
   try {
     const ffmpegSrc = execSync("which ffmpeg").toString().trim();
-    copy(ffmpegSrc, "ffmpeg");
+    copy(ffmpegSrc, "ffmpeg", true);
     const ffprobeSrc = execSync("which ffprobe").toString().trim();
-    copy(ffprobeSrc, "ffprobe");
+    copy(ffprobeSrc, "ffprobe", true);
     const tesseractSrc = execSync("which tesseract").toString().trim();
-    copy(tesseractSrc, "tesseract");
+    copy(tesseractSrc, "tesseract", true);
   } catch {}
 }
 if (plat === "win32") {
@@ -65,14 +65,16 @@ if (plat === "win32") {
   const baseDest = path.join(root, "src-tauri", "onnxruntime-win-x64-gpu-1.22.0");
   const libDir = path.join(baseDest, "lib");
   fs.mkdirSync(srcDir, { recursive: true });
-  if (!fs.existsSync(libDir)) {
+  const checkDll = path.join(libDir, "onnxruntime.dll");
+  if (!fs.existsSync(checkDll)) {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
-    execSync(`curl -L ${url} -o ${zip}`);
-    execSync(`powershell -Command \"Expand-Archive -Path '${zip}' -DestinationPath '${repoRoot}'\"`);
-    fs.unlinkSync(zip);
+    execSync(`curl -L ${url} -o "${zip}"`);
+
     fs.rmSync(baseDest, { recursive: true, force: true });
-    fs.renameSync(path.join(repoRoot, "onnxruntime-win-x64-gpu-1.22.0"), baseDest);
+    fs.mkdirSync(baseDest, { recursive: true });
+    execSync(`tar -xf "${zip}" -C "${baseDest}" --strip-components=1`);
+    fs.unlinkSync(zip);
   }
   for (const lib of libs) {
     const srcLib = path.join(libDir, lib);
