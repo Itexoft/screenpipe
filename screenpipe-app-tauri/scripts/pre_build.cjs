@@ -51,35 +51,35 @@ if (plat !== "win32") {
     copy(ffmpegSrc, "ffmpeg");
     const ffprobeSrc = execSync("which ffprobe").toString().trim();
     copy(ffprobeSrc, "ffprobe");
+    const tesseractSrc = execSync("which tesseract").toString().trim();
+    copy(tesseractSrc, "tesseract");
   } catch {}
 }
 if (plat === "win32") {
   const libs = [
     "onnxruntime.dll",
     "onnxruntime_providers_cuda.dll",
-    "onnxruntime_providers_shared.dll",
+    "onnxruntime_providers_shared.dll"
   ];
   const srcDir = path.join(repoRoot, "target", triple, "release");
   const baseDest = path.join(root, "src-tauri", "onnxruntime-win-x64-gpu-1.22.0");
-  const dest = path.join(baseDest, "lib");
+  const libDir = path.join(baseDest, "lib");
   fs.mkdirSync(srcDir, { recursive: true });
-  fs.mkdirSync(dest, { recursive: true });
-  const missing = libs.filter(lib => !fs.existsSync(path.join(srcDir, lib)));
-  if (missing.length) {
+  if (!fs.existsSync(libDir)) {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
     execSync(`curl -L ${url} -o ${zip}`);
-    execSync(`powershell -Command "Expand-Archive -Path '${zip}' -DestinationPath '${repoRoot}'"`);
+    execSync(`powershell -Command \"Expand-Archive -Path '${zip}' -DestinationPath '${repoRoot}'\"`);
     fs.unlinkSync(zip);
     fs.rmSync(baseDest, { recursive: true, force: true });
     fs.renameSync(path.join(repoRoot, "onnxruntime-win-x64-gpu-1.22.0"), baseDest);
   }
   for (const lib of libs) {
-    const s = path.join(dest, lib);
-    if (!fs.existsSync(s)) {
-      console.error(`${lib} not found`, { s });
+    const srcLib = path.join(libDir, lib);
+    if (!fs.existsSync(srcLib)) {
+      console.error(`${lib} not found`, { srcLib });
       process.exit(1);
     }
-    fs.copyFileSync(s, path.join(srcDir, lib));
+    fs.copyFileSync(srcLib, path.join(srcDir, lib));
   }
 }
