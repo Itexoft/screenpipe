@@ -254,6 +254,11 @@ jobs:
           Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe"
           Get-ChildItem "screenpipe-app-tauri\src-tauri\binaries"
         shell: pwsh
+      - name: Clean stale ORT symlinks
+        shell: pwsh
+        run: |
+          $p = "$env:GITHUB_WORKSPACE\target\x86_64-pc-windows-msvc\release"
+          if (Test-Path $p) { Get-ChildItem $p -Filter "onnxruntime*.dll" -Force | Remove-Item -Force }
       - run: |
           Get-ChildItem 'src-tauri\onnxruntime-win-x64-gpu-1.22.0' -Recurse
           try {
