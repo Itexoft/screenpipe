@@ -142,19 +142,37 @@ on:
         run: |
           cargo build --release --target x86_64-pc-windows-msvc
 
-      - run: |
-          $objs = Get-ChildItem "target/x86_64-pc-windows-msvc/release/build/knf-rs-sys-*/out/**/*.obj" -Recurse -ErrorAction SilentlyContinue
-          $bad = @()
-          foreach ($o in $objs) {
-            $d = & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /directives $o.FullName 2>$null
-            if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $o.FullName }
-          }
-          if ($bad.Count -gt 0) {
-            Write-Host "Found static CRT directives in:"
-            $bad | ForEach-Object { Write-Host $_ }
-            exit 1
-          }
-        shell: pwsh
+        - run: |
+            $objs = Get-ChildItem "target/x86_64-pc-windows-msvc/release/build/knf-rs-sys-*/out/**/*.obj" -Recurse -ErrorAction SilentlyContinue
+            $bad = @()
+            $pws = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+            if (-not (Test-Path $pws)) { $pws = "${env:ProgramFiles}\Microsoft Visual Studio\Installer\vswhere.exe" }
+            $vs = ""
+            if (Test-Path $pws) { $vs = & "$pws" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath }
+            if (-not $vs) {
+              $roots = @("${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022","${env:ProgramFiles}\Microsoft Visual Studio\2022","${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019","${env:ProgramFiles}\Microsoft Visual Studio\2019")
+              $eds = @("Enterprise","Community","Professional","BuildTools")
+              foreach ($r in $roots) {
+                foreach ($e in $eds) {
+                  $cand = Join-Path $r $e
+                  if (Test-Path (Join-Path $cand "VC\Tools\MSVC")) { $vs = $cand; break }
+                }
+                if ($vs) { break }
+              }
+            }
+            if (-not $vs) { Write-Host "Visual Studio with VC Tools not found"; exit 1 }
+            $dump = Get-ChildItem (Join-Path $vs "VC\Tools\MSVC") -Recurse -Filter dumpbin.exe | Select-Object -First 1 -ExpandProperty FullName
+            if (-not $dump) { Write-Host "dumpbin.exe not found"; exit 1 }
+            foreach ($o in $objs) {
+              $d = & $dump /directives $o.FullName 2>$null
+              if ($d -match "libcmt" -or $d -match "libcpmt") { $bad += $o.FullName }
+            }
+            if ($bad.Count -gt 0) {
+              Write-Host "Found static CRT directives in:"
+              $bad | ForEach-Object { Write-Host $_ }
+              exit 1
+            }
+          shell: pwsh
 
       - name: Set version
         shell: pwsh
