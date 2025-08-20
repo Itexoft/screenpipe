@@ -1,5 +1,10 @@
 fn main() {
-    #[cfg(target_os = "macos")]
-    println!("cargo:rustc-link-lib=framework=AVFoundation");
-    tauri_build::build()
+    tauri_build::build();
+    #[cfg(target_os = "windows")]
+    {
+        let has = glob::glob("vcredist/*.dll").unwrap().next().is_some();
+        if !has {
+            panic!("vcredist dlls not found");
+        }
+    }
 }
