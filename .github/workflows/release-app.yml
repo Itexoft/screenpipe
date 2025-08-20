@@ -525,26 +525,40 @@ jobs:
 
       - name: Copy library for vcredist
         if: matrix.os_type == 'windows'
-        shell: powershell
+        shell: pwsh
         run: |
-          # Create target directory
-          $vcredist_dir = "screenpipe-app-tauri/src-tauri/vcredist"
-          New-Item -ItemType Directory -Force -Path $vcredist_dir | Out-Null
-
-          # Install and copy VcRedist
-          Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-          iex ((New-Object System.Net.WebClient).DownloadString('https://vcredist.com/install.ps1'))
-
-          Write-Host "Copying DLL files..."
-          Copy-Item C:\Windows\System32\vcruntime140.dll -Destination $vcredist_dir -Force
-
-          # Verify DLLs were copied
-          $dll_count = (Get-ChildItem -Path $vcredist_dir -Filter "*.dll").Count
-          Write-Host "Found $dll_count DLLs in target directory"
-          if ($dll_count -eq 0) {
-            throw "No DLLs found in target directory!"
+          $pws = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (-not (Test-Path $pws)) { $pws = "${env:ProgramFiles}\Microsoft Visual Studio\Installer\vswhere.exe" }
+          $vs = ""
+          if (Test-Path $pws) { $vs = & "$pws" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Redist.14.Latest -property installationPath }
+          if (-not $vs -and (Test-Path $pws)) { $vs = & "$pws" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath }
+          if (-not $vs) {
+            $roots = @("${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022","${env:ProgramFiles}\Microsoft Visual Studio\2022","${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019","${env:ProgramFiles}\Microsoft Visual Studio\2019")
+            $eds = @("Enterprise","Professional","Community","BuildTools")
+            foreach ($r in $roots) {
+              foreach ($e in $eds) {
+                $cand = Join-Path $r $e
+                if (Test-Path (Join-Path $cand "VC\Redist\MSVC")) { $vs = $cand; break }
+              }
+              if ($vs) { break }
+            }
           }
+          $red = Join-Path $vs "VC\Redist\MSVC"
+          $ver = (Get-ChildItem $red -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          $crt = (Get-ChildItem (Join-Path $ver "x64") -Directory -Filter "Microsoft.VC*.CRT" | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          $omp = (Get-ChildItem (Join-Path $ver "x64") -Directory -Filter "Microsoft.VC*.OpenMP" | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          $dst = "$env:GITHUB_WORKSPACE\screenpipe-app-tauri\src-tauri\vcredist"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item (Join-Path $crt "*.dll") $dst -Force
+          if (Test-Path $omp) { Copy-Item (Join-Path $omp "*.dll") $dst -Force }
+          Get-ChildItem $dst
+
+      - name: Clean stale ORT
+        if: matrix.os_type == 'windows'
+        shell: pwsh
+        run: |
+          $p = "$env:GITHUB_WORKSPACE\target\x86_64-pc-windows-msvc\release"
+          if (Test-Path $p) { Get-ChildItem $p -Filter "onnxruntime*.dll" -Force | Remove-Item -Force }
 
       - if: secrets.TAURI_PRIVATE_KEY == ''
         working-directory: screenpipe-app-tauri/src-tauri
