@@ -283,6 +283,7 @@ export const getStore = async () => {
 			const dir = await localDataDir();
 			const profilesStore = new TauriStore(`${dir}/screenpipe/profiles.bin`, {
 				autoSave: false,
+                                defaults: {},
 			});
 			const activeProfile =
 				(await profilesStore.get("activeProfile")) || "default";
@@ -293,6 +294,7 @@ export const getStore = async () => {
 			console.log("activeProfile", activeProfile, file);
 			return new TauriStore(`${dir}/screenpipe/${file}`, {
 				autoSave: false,
+                                defaults: DEFAULT_SETTINGS,
 			});
 		})();
 	}
