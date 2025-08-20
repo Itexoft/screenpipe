@@ -5,11 +5,12 @@
     "dev": "next dev",
     "test:e2e": "wdio run wdio.conf.js",
     "test:e2e:terminator": "mocha",
+    "test:bundler-deps": "sh ../scripts/test-bundler-deps.sh",
     "build": "next build",
     "predev": "node scripts/pre_build.cjs",
     "prebuild": "node scripts/pre_build.cjs",
     "pretauri": "node scripts/pre_build.cjs",
-    "tauri": "cross-env TAURI_LOG_LEVEL=warn tauri",
+    "tauri": "cross-env APPIMAGE_EXTRACT_AND_RUN=1 TAURI_LOG_LEVEL=warn tauri",
     "clean": "rm -rf out && cargo clean && rm -rf src-tauri/{screenpipe-*,tesseract-*,ffmpeg*,bun*,ollama*,ui_monitor*} node_modules"
   },
   "dependencies": {
