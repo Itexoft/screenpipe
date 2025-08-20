@@ -107,7 +107,7 @@ jobs:
             libgtk-3-dev librsvg2-dev patchelf libdbus-1-dev libfuse2 gstreamer1.0-libav \
             gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
             gstreamer1.0-tools libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev \
-            libglib2.0-bin libgdk-pixbuf2.0-bin libgtk-3-bin desktop-file-utils
+            libglib2.0-bin libgdk-pixbuf2.0-bin libgtk-3-bin desktop-file-utils appstream
       - run: |
           export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
           pkg-config --version
