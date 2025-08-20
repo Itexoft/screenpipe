@@ -37,6 +37,9 @@ function copy(src, base, plain, dir) {
 }
 
 const screenpipeSrc = path.join(repoRoot, "target", triple, "release", `screenpipe${ext}`);
+if (!fs.existsSync(screenpipeSrc)) {
+  execSync(`cargo build --bin screenpipe --package screenpipe-server --release --target ${triple}`, { stdio: "inherit", cwd: repoRoot });
+}
 copy(screenpipeSrc, "screenpipe");
 let bunSrc;
 try {
