@@ -70,6 +70,7 @@ if (plat === "win32") {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
     execSync(`curl -L ${url} -o "${zip}"`);
+
     fs.rmSync(baseDest, { recursive: true, force: true });
     fs.mkdirSync(baseDest, { recursive: true });
     execSync(`tar -xf "${zip}" -C "${baseDest}" --strip-components=1`);
