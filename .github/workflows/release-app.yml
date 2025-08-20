@@ -329,6 +329,8 @@ jobs:
             patchelf \
             libfuse2 \
             gstreamer1.0-libav \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
             gstreamer1.0-plugins-bad \
             gstreamer1.0-plugins-base \
             gstreamer1.0-plugins-good \
@@ -350,6 +352,9 @@ jobs:
           wget https://launchpadlibrarian.net/587202140/libjpeg-turbo8_2.1.2-0ubuntu1_amd64.deb
           wget https://launchpadlibrarian.net/592959859/xdg-desktop-portal-gtk_1.14.0-1build1_amd64.deb
           sudo apt-get install -y /tmp/ubuntu-packages/*.deb
+
+      - run: pkg-config --modversion gstreamer-1.0 gstreamer-plugins-base-1.0
+        if: matrix.os_type == 'linux'
 
       - name: Install frontend dependencies
         working-directory: ./screenpipe-app-tauri

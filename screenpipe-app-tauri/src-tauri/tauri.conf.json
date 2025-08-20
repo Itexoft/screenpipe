@@ -36,7 +36,10 @@
     "resources": [
       "assets/*",
       "vcredist/*"
-    ]
+    ],
+    "appimage": {
+      "bundleMediaFramework": true
+    }
   },
   "plugins": {
     "deep-link": {
