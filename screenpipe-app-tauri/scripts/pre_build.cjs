@@ -72,6 +72,7 @@ if (plat === "win32") {
   const libs = [
     "onnxruntime.dll",
     "onnxruntime_providers_cuda.dll",
+    "onnxruntime_providers_tensorrt.dll",
     "onnxruntime_providers_shared.dll"
   ];
   const srcDir = path.join(repoRoot, "target", triple, "release");
@@ -81,19 +82,29 @@ if (plat === "win32") {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
     execSync(`curl -L ${url} -o "${zip}"`);
+    const tmp = path.join(root, "src-tauri", "onnxruntime-tmp");
+    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.mkdirSync(tmp, { recursive: true });
+    if (realPlat === "win32") {
+      execSync(`powershell -Command "Expand-Archive -Path '${zip}' -DestinationPath '${tmp}'"`);
+    } else {
+      execSync(`unzip -q "${zip}" -d "${tmp}"`);
+    }
+    const dirs = fs.readdirSync(tmp).map(n => path.join(tmp, n));
+    const inner = dirs.find(d => fs.existsSync(path.join(d, "lib", "onnxruntime.dll")));
+    if (!inner) {
+      console.error("extraction failed");
+      process.exit(1);
+    }
     fs.rmSync(pkgDir, { recursive: true, force: true });
     fs.mkdirSync(pkgDir, { recursive: true });
-    if (realPlat === "win32") {
-      execSync(`tar -xf "${zip}" -C "${pkgDir}" --strip-components=1`);
-    } else {
-      execSync(`unzip -q "${zip}" -d "${pkgDir}"`);
-      const inner = path.join(pkgDir, "onnxruntime-win-x64-gpu-1.22.0");
-      if (fs.existsSync(inner)) {
-        for (const e of fs.readdirSync(inner)) fs.renameSync(path.join(inner, e), path.join(pkgDir, e));
-        fs.rmSync(inner, { recursive: true, force: true });
-      }
-    }
+    fs.cpSync(inner, pkgDir, { recursive: true });
+    fs.rmSync(tmp, { recursive: true, force: true });
     fs.unlinkSync(zip);
+  }
+  if (!fs.existsSync(path.join(pkgDir, "lib", "onnxruntime.dll"))) {
+    console.error("onnxruntime.dll not found");
+    process.exit(1);
   }
   for (const lib of libs) {
     const srcLib = path.join(pkgDir, "lib", lib);
