@@ -96,11 +96,13 @@ jobs:
           cargo tree -e features -i ort
       - run: printenv | sort
       - run: cargo metadata --no-deps --format-version=1 | jq -r '.packages[].name'
-      - run: |
+      - name: Fix libunwind conflict and install deps
+        run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            g++ ffmpeg tesseract-ocr cmake clang libavformat-dev libavfilter-dev libavdevice-dev \
-            libssl-dev libtesseract-dev libxdo-dev libsdl2-dev libclang-dev libxtst-dev libx11-dev \
+          sudo apt-get remove -y 'libunwind-[0-9]*-dev' 'libc++-[0-9]*-dev' || true
+          sudo apt-get install -y --no-install-recommends \
+            g++ ffmpeg tesseract-ocr cmake libavformat-dev libavfilter-dev libavdevice-dev \
+            libssl-dev libtesseract-dev libxdo-dev libsdl2-dev libxtst-dev libx11-dev \
             libxext-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev \
             libasound2-dev libudev-dev libpulse-dev curl pkg-config libsqlite3-dev libbz2-dev zlib1g-dev \
             libonig-dev libayatana-appindicator3-dev libsamplerate-dev libwebrtc-audio-processing-dev \
@@ -108,7 +110,10 @@ jobs:
             libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
             gstreamer1.0-plugins-bad gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
             gstreamer1.0-tools libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev \
-            libglib2.0-bin libgdk-pixbuf2.0-bin libgtk-3-bin desktop-file-utils appstream
+            libglib2.0-bin libgdk-pixbuf2.0-bin libgtk-3-bin desktop-file-utils appstream \
+            libunwind-dev
+          dpkg -l | egrep 'libunwind|libc\+\+' || true
+          pkg-config --modversion gstreamer-1.0 gstreamer-plugins-base-1.0
       - run: |
           export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig:$PKG_CONFIG_PATH"
             pkg-config --version
