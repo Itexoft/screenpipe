@@ -5355,6 +5355,7 @@ dependencies = [
  "freedesktop-icon-lookup",
  "futures",
  "futures-channel",
+ "glob",
  "gtk",
  "http 0.2.12",
  "image 0.25.5",
