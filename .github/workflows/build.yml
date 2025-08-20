@@ -310,7 +310,7 @@ jobs:
       - name: Stage MSVC CRT
         shell: pwsh
         run: |
-          $pws = "$Env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+          $pws = "${Env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
           $vs  = & $pws -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           $red = Join-Path $vs "VC\Redist\MSVC"
           $ver = (Get-ChildItem $red -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName

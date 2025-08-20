@@ -37,8 +37,10 @@
       "assets/*",
       "vcredist/*"
     ],
-    "appimage": {
-      "bundleMediaFramework": true
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      }
     }
   },
   "plugins": {
