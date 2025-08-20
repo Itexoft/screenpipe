@@ -20,13 +20,14 @@ const defaultTriple =
 const triple = envTriple || defaultTriple;
 const ext = plat === "win32" ? ".exe" : "";
 
-function copy(src, base, plain) {
-  const dest = path.join(destDir, plain ? `${base}${ext}` : `${base}-${triple}${ext}`);
+function copy(src, base, plain, dir) {
+  const targetDir = dir || destDir;
+  const dest = path.join(targetDir, plain ? `${base}${ext}` : `${base}-${triple}${ext}`);
   if (!fs.existsSync(src)) {
     console.error(`${base} binary not found`, { src, triple });
     process.exit(1);
   }
-  fs.mkdirSync(destDir, { recursive: true });
+  fs.mkdirSync(targetDir, { recursive: true });
   fs.copyFileSync(src, dest);
   if (plat !== "win32") {
     try { fs.chmodSync(dest, 0o755); } catch {}
@@ -52,7 +53,7 @@ if (plat !== "win32") {
     const ffprobeSrc = execSync("which ffprobe").toString().trim();
     copy(ffprobeSrc, "ffprobe", true);
     const tesseractSrc = execSync("which tesseract").toString().trim();
-    copy(tesseractSrc, "tesseract", true);
+    copy(tesseractSrc, "tesseract", true, path.join(root, "src-tauri"));
   } catch {}
 }
 if (plat === "win32") {
@@ -63,9 +64,9 @@ if (plat === "win32") {
   ];
   const srcDir = path.join(repoRoot, "target", triple, "release");
   const baseDest = path.join(root, "src-tauri", "onnxruntime-win-x64-gpu-1.22.0");
-  const libDir = path.join(baseDest, "lib");
+  let libDir = path.join(baseDest, "lib");
   fs.mkdirSync(srcDir, { recursive: true });
-  const checkDll = path.join(libDir, "onnxruntime.dll");
+  let checkDll = path.join(libDir, "onnxruntime.dll");
   if (!fs.existsSync(checkDll)) {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
@@ -73,8 +74,12 @@ if (plat === "win32") {
 
     fs.rmSync(baseDest, { recursive: true, force: true });
     fs.mkdirSync(baseDest, { recursive: true });
-    execSync(`tar -xf "${zip}" -C "${baseDest}" --strip-components=1`);
+    execSync(`tar -xf "${zip}" -C "${baseDest}"`);
     fs.unlinkSync(zip);
+  }
+  if (!fs.existsSync(checkDll)) {
+    libDir = path.join(baseDest, "onnxruntime-win-x64-gpu-1.22.0", "lib");
+    checkDll = path.join(libDir, "onnxruntime.dll");
   }
   for (const lib of libs) {
     const srcLib = path.join(libDir, lib);
