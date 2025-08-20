@@ -15,8 +15,8 @@
             "appimage": {
                 "files": {
                     "/usr/bin/tesseract": "tesseract",
-                    "/usr/bin/ffmpeg": "binaries/ffmpeg",
-                    "/usr/bin/ffprobe": "binaries/ffprobe"
+                    "binaries/ffmpeg": "/usr/bin/ffmpeg",
+                    "binaries/ffprobe": "/usr/bin/ffprobe"
                 }
             }
         }
