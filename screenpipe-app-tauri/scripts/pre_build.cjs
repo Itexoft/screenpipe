@@ -63,24 +63,32 @@ if (plat === "win32") {
     "onnxruntime_providers_shared.dll"
   ];
   const srcDir = path.join(repoRoot, "target", triple, "release");
-  const baseDest = path.join(root, "src-tauri");
-  const pkgDir = path.join(baseDest, "onnxruntime-win-x64-gpu-1.22.0");
-  let libDir = path.join(pkgDir, "lib");
+  const pkgDir = path.join(root, "src-tauri", "onnxruntime-win-x64-gpu-1.22.0");
   fs.mkdirSync(srcDir, { recursive: true });
+  let libDir = path.join(pkgDir, "lib");
   let checkDll = path.join(libDir, "onnxruntime.dll");
   if (!fs.existsSync(checkDll)) {
     const url = "https://github.com/microsoft/onnxruntime/releases/download/v1.22.0/onnxruntime-win-x64-gpu-1.22.0.zip";
     const zip = path.join(repoRoot, "onnxruntime.zip");
     execSync(`curl -L ${url} -o "${zip}"`);
     fs.rmSync(pkgDir, { recursive: true, force: true });
-    fs.mkdirSync(baseDest, { recursive: true });
-    execSync(`tar -xf "${zip}" -C "${baseDest}"`);
+    fs.mkdirSync(pkgDir, { recursive: true });
+    try {
+      execSync(`tar -xf "${zip}" -C "${pkgDir}" --strip-components=1`);
+    } catch {
+      execSync(`tar -xf "${zip}" -C "${pkgDir}"`);
+    }
     fs.unlinkSync(zip);
     checkDll = path.join(libDir, "onnxruntime.dll");
   }
   if (!fs.existsSync(checkDll)) {
-    console.error("onnxruntime.dll not found", { libDir });
-    process.exit(1);
+    const alt = path.join(pkgDir, "onnxruntime-win-x64-gpu-1.22.0", "lib");
+    if (fs.existsSync(path.join(alt, "onnxruntime.dll"))) {
+      libDir = alt;
+    } else {
+      console.error("onnxruntime.dll not found", { libDir });
+      process.exit(1);
+    }
   }
   for (const lib of libs) {
     const srcLib = path.join(libDir, lib);
