@@ -21,6 +21,12 @@ const defaultTriple =
 const triple = envTriple || defaultTriple;
 const ext = plat === "win32" ? ".exe" : "";
 
+function copyFresh(src, dest) {
+  try { fs.rmSync(dest, { force: true }); } catch {}
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+}
+
 function copy(src, base, plain, dir) {
   const targetDir = dir || destDir;
   const dest = path.join(targetDir, plain ? `${base}${ext}` : `${base}-${triple}${ext}`);
@@ -28,8 +34,7 @@ function copy(src, base, plain, dir) {
     console.error(`${base} binary not found`, { src, triple });
     process.exit(1);
   }
-  fs.mkdirSync(targetDir, { recursive: true });
-  fs.copyFileSync(src, dest);
+  copyFresh(src, dest);
   if (plat !== "win32") {
     try { fs.chmodSync(dest, 0o755); } catch {}
   }
@@ -123,6 +128,6 @@ if (plat === "win32") {
     }
     const destLib = path.join(srcDir, lib);
     console.log("copying", { src: srcLib, dest: destLib });
-    fs.copyFileSync(srcLib, destLib);
+    copyFresh(srcLib, destLib);
   }
 }
