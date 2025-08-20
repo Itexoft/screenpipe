@@ -67,17 +67,21 @@ try {
         Invoke-Expression (Invoke-RestMethod -Uri "https://bun.sh/install.ps1")
     }
     
-    # Install Visual Studio Redistributables to avoid any ort issues
     Write-Host "Installing Visual Studio Redistributables..."
-    Write-Host "The script requires administrative privileges. You will be prompted to allow this action."
-
-    $installScript = @"
-    Set-ExecutionPolicy Bypass -Scope Process -Force
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://vcredist.com/install.ps1'))
-"@
-
-    Start-Process powershell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"$installScript`""
+    $vswherePaths = @(
+        "$env:ProgramFiles\Microsoft Visual Studio\Installer\vswhere.exe",
+        "$env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    )
+    $vswhere = $vswherePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $vswhere) { throw "vswhere.exe not found" }
+    $vsInstall = & $vswhere -latest -products * -property installationPath
+    if (-not $vsInstall) { throw "Visual Studio installation not found" }
+    $redistRoot = Join-Path $vsInstall "VC\Redist\MSVC"
+    $latestRedist = Get-ChildItem $redistRoot -Directory | Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+    if (-not $latestRedist) { throw "No VC Redist versions found" }
+    $crtDir = Get-ChildItem (Join-Path $latestRedist.FullName "x64") -Directory -Filter "Microsoft.VC*.CRT" | Select-Object -First 1
+    if (-not $crtDir) { throw "CRT directory not found in $($latestRedist.FullName)" }
+    Copy-Item $crtDir.FullName (Join-Path $installDir "bin") -Recurse -Force
 
     Write-Host "Installation Complete"
     Write-Host ""
