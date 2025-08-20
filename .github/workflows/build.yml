@@ -164,6 +164,16 @@ jobs:
         with:
           name: screenpipe-app-linux
           path: screenpipe-app-tauri/src-tauri/target/release/bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenpipe-linux-artifacts
+          path: |
+            target
+            screenpipe-app-tauri/node_modules
+            screenpipe-app-tauri/src-tauri/binaries
+            screenpipe-app-tauri/src-tauri/onnxruntime-linux-x64-gpu-1.22.0
+            screenpipe-app-tauri/src-tauri/ffmpeg
+            screenpipe-app-tauri/src-tauri/target
 
   build-windows:
     runs-on: windows-latest
@@ -243,7 +253,15 @@ jobs:
           Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe"
           Get-ChildItem "screenpipe-app-tauri\src-tauri\binaries"
         shell: pwsh
-      - run: node ./scripts/pre_build.cjs
+      - run: |
+          Get-ChildItem 'src-tauri\onnxruntime-win-x64-gpu-1.22.0' -Recurse
+          try {
+            node ./scripts/pre_build.cjs
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } finally {
+            Get-ChildItem 'src-tauri\onnxruntime-win-x64-gpu-1.22.0' -Recurse
+            Get-ChildItem '..\target\x86_64-pc-windows-msvc\release'
+          }
         working-directory: screenpipe-app-tauri
         shell: pwsh
       - run: |
