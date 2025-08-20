@@ -72,6 +72,7 @@ if (plat === "win32") {
   const libs = [
     "onnxruntime.dll",
     "onnxruntime_providers_cuda.dll",
+    "onnxruntime_providers_tensorrt.dll",
     "onnxruntime_providers_shared.dll"
   ];
   const srcDir = path.join(repoRoot, "target", triple, "release");
@@ -89,13 +90,15 @@ if (plat === "win32") {
     } else {
       execSync(`unzip -q "${zip}" -d "${tmp}"`);
     }
-    const inner = path.join(tmp, "onnxruntime-win-x64-gpu-1.22.0");
-    if (!fs.existsSync(inner)) {
+    const dirs = fs.readdirSync(tmp).map(n => path.join(tmp, n));
+    const inner = dirs.find(d => fs.existsSync(path.join(d, "lib", "onnxruntime.dll")));
+    if (!inner) {
       console.error("extraction failed");
       process.exit(1);
     }
     fs.rmSync(pkgDir, { recursive: true, force: true });
-    fs.renameSync(inner, pkgDir);
+    fs.mkdirSync(pkgDir, { recursive: true });
+    fs.cpSync(inner, pkgDir, { recursive: true });
     fs.rmSync(tmp, { recursive: true, force: true });
     fs.unlinkSync(zip);
   }
