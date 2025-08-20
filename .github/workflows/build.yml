@@ -254,7 +254,7 @@ jobs:
           Copy-Item "target\x86_64-pc-windows-msvc\release\screenpipe.exe" "screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe"
           Get-ChildItem "screenpipe-app-tauri\src-tauri\binaries"
         shell: pwsh
-      - name: Clean stale ORT symlinks
+      - name: Clean stale ORT
         shell: pwsh
         run: |
           $p = "$env:GITHUB_WORKSPACE\target\x86_64-pc-windows-msvc\release"
@@ -305,6 +305,18 @@ jobs:
       - run: |
           if (!(Test-Path screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
         shell: pwsh
+      - name: Stage MSVC CRT
+        shell: pwsh
+        run: |
+          $pws = "$Env:ProgramFiles(x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs  = & $pws -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          $red = Join-Path $vs "VC\Redist\MSVC"
+          $ver = (Get-ChildItem $red -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          $crt = (Get-ChildItem (Join-Path $ver "x64") -Directory -Filter "Microsoft.VC*.CRT" | Sort-Object Name -Descending | Select-Object -First 1).FullName
+          $dst = "$Env:GITHUB_WORKSPACE\screenpipe-app-tauri\src-tauri\vcredist"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          Copy-Item (Join-Path $crt "*.dll") $dst -Force
+          Get-ChildItem $dst
       - run: pnpm run tauri build -- --quiet
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4
