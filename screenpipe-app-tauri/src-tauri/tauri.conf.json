@@ -93,6 +93,9 @@
           ]
         }
       ]
+    },
+    "updater": {
+      "active": false
     }
   },
   "app": {
