@@ -167,7 +167,7 @@ jobs:
       - run: pnpm run tauri build -- --verbose
         working-directory: screenpipe-app-tauri
         env:
-          APPIMAGE_EXTRACT_AND_RUN: '1'
+          APPIMAGE_EXTRACT_AND_RUN: "1"
       - uses: actions/upload-artifact@v4
         with:
           name: screenpipe-app-linux
@@ -312,19 +312,29 @@ jobs:
       - run: |
           if (!(Test-Path screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
         shell: pwsh
+      - name: Setup Intel OpenMP
+        shell: pwsh
+        run: |
+          $mklDir = "$env:GITHUB_WORKSPACE\screenpipe-app-tauri\src-tauri\mkl"
+          New-Item -ItemType Directory -Force -Path $mklDir | Out-Null
+          python -m pip install --upgrade pip
+          $tempDir = "temp_omp"
+          New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+          python -m pip install intel-openmp --target $tempDir
+          Get-ChildItem -Path $tempDir -Recurse -Filter "*.dll" | ForEach-Object { Copy-Item $_.FullName -Destination $mklDir -Force }
+          Remove-Item -Path $tempDir -Recurse -Force
       - name: Download VC++ Redistributable
         shell: pwsh
         run: |
-            $dst = "$env:GITHUB_WORKSPACE\screenpipe-app-tauri\src-tauri\vcredist"
-            New-Item -ItemType Directory -Force -Path $dst | Out-Null
-            $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
-            $output = Join-Path $dst "vc_redist.x64.exe"
-            Invoke-WebRequest -Uri $url -OutFile $output
-            Get-ChildItem $dst
+          $dst = "$env:GITHUB_WORKSPACE\screenpipe-app-tauri\src-tauri\vcredist"
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+          $output = Join-Path $dst "vc_redist.x64.exe"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Get-ChildItem $dst
       - run: pnpm run tauri build -- --quiet
         working-directory: screenpipe-app-tauri
       - uses: actions/upload-artifact@v4
         with:
           name: screenpipe-app-windows
           path: screenpipe-app-tauri/src-tauri/target/release/bundle
-
