@@ -33,9 +33,9 @@
       "icons/screenpipe-logo-tray-failed.png",
       "icons/screenpipe-logo-tray-black.png"
     ],
-      "resources": [
-        "assets/*"
-      ],
+    "resources": [
+      "assets/*"
+    ],
     "linux": {
       "appimage": {
         "bundleMediaFramework": true
