@@ -312,33 +312,14 @@ jobs:
       - run: |
           if (!(Test-Path screenpipe-app-tauri\src-tauri\binaries\screenpipe-x86_64-pc-windows-msvc.exe)) { exit 1 }
         shell: pwsh
-      - name: Stage MSVC CRT
+      - name: Download VC++ Redistributable
         shell: pwsh
         run: |
-            $pws = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-            if (-not (Test-Path $pws)) { $pws = "${env:ProgramFiles}\Microsoft Visual Studio\Installer\vswhere.exe" }
-            $vs = ""
-            if (Test-Path $pws) { $vs = & "$pws" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Redist.14.Latest -property installationPath }
-            if (-not $vs -and (Test-Path $pws)) { $vs = & "$pws" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath }
-            if (-not $vs) {
-              $roots = @("${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022","${env:ProgramFiles}\Microsoft Visual Studio\2022","${env:ProgramFiles(x86)}\Microsoft Visual Studio\2019","${env:ProgramFiles}\Microsoft Visual Studio\2019")
-              $eds = @("Enterprise","Professional","Community","BuildTools")
-              foreach ($r in $roots) {
-                foreach ($e in $eds) {
-                  $cand = Join-Path $r $e
-                  if (Test-Path (Join-Path $cand "VC\Redist\MSVC")) { $vs = $cand; break }
-                }
-                if ($vs) { break }
-              }
-            }
-            $red = Join-Path $vs "VC\Redist\MSVC"
-            $ver = (Get-ChildItem $red -Directory | Sort-Object Name -Descending | Select-Object -First 1).FullName
-            $crt = (Get-ChildItem (Join-Path $ver "x64") -Directory -Filter "Microsoft.VC*.CRT" | Sort-Object Name -Descending | Select-Object -First 1).FullName
-            $omp = (Get-ChildItem (Join-Path $ver "x64") -Directory -Filter "Microsoft.VC*.OpenMP" | Sort-Object Name -Descending | Select-Object -First 1).FullName
             $dst = "$env:GITHUB_WORKSPACE\screenpipe-app-tauri\src-tauri\vcredist"
             New-Item -ItemType Directory -Force -Path $dst | Out-Null
-            Copy-Item (Join-Path $crt "*.dll") $dst -Force
-            if (Test-Path $omp) { Copy-Item (Join-Path $omp "*.dll") $dst -Force }
+            $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+            $output = Join-Path $dst "vc_redist.x64.exe"
+            Invoke-WebRequest -Uri $url -OutFile $output
             Get-ChildItem $dst
       - run: pnpm run tauri build -- --quiet
         working-directory: screenpipe-app-tauri

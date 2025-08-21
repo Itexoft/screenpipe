@@ -23,7 +23,7 @@
             "onnxruntime*\\lib\\onnxruntime_providers_cuda.dll": "./",
             "onnxruntime*\\lib\\onnxruntime_providers_shared.dll": "./",
             "mkl\\*.dll": "./",
-            "vcredist\\*.dll": "./",
+            "vcredist\\vc_redist.x64.exe": "./",
             "assets/*": "./assets/"
         }
     }
