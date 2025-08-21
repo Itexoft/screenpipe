@@ -1,5 +1,10 @@
 {
     "bundle": {
+        "targets": [
+            "app",
+            "deb",
+            "appimage"
+        ],
         "externalBin": [
             "binaries/screenpipe",
             "binaries/bun"
@@ -13,6 +18,7 @@
                 ]
             },
             "appimage": {
+                "bundleMediaFramework": true,
                 "files": {
                     "/usr/bin/tesseract": "tesseract",
                     "binaries/ffmpeg-${triple}": "/usr/bin/ffmpeg",
