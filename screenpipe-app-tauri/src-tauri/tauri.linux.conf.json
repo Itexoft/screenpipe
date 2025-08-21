@@ -13,6 +13,7 @@
                 ]
             },
             "appimage": {
+                "bundleMediaFramework": true,
                 "files": {
                     "/usr/bin/tesseract": "tesseract",
                     "binaries/ffmpeg-${triple}": "/usr/bin/ffmpeg",
